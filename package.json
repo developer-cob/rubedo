@@ -1,22 +1,16 @@
 {
-  "dependencies": {
-    "esbuild": "^0.15.9",
-    "fs-extra": "^10.1.0",
-    "i": "^0.3.7",
-    "javascript-obfuscator": "^4.0.0",
-    "npm": "^8.19.2"
-  },
+  "type": "module",
   "name": "rubedo",
   "description": "Welcome to Rubedo, Rubedo is a brand new Anti-cheat designed for Realms, Servers, Worlds and anyone who wants to protect there worlds from Hackers! Rubedo Uses Minecraft's Most advanced functionality so that includes Gametest.",
-  "version": "2.7.0-beta",
-  "main": "index.js",
+  "version": "3.0.0-beta",
+  "main": "scripts/index.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/smell-of-curry/rubedo.git"
   },
   "scripts": {
-    "build": "node build.js",
-    "dev": "node build.js dev"
+    "build": "ts-node --project tsconfig.json ./build.ts",
+    "dev": "npx ts-node --esm build.ts dev"
   },
   "keywords": [],
   "author": "",
@@ -26,7 +20,13 @@
   },
   "homepage": "https://github.com/smell-of-curry/rubedo#readme",
   "devDependencies": {
-    "@minecraft/server": "^1.1.0-beta.1.19.60-stable",
-    "@minecraft/server-ui": "^1.0.0-beta.1.19.60-stable"
+    "@minecraft/server": "^1.7.0-beta.1.20.40-stable",
+    "@types/fs-extra": "^11.0.3",
+    "esbuild": "^0.15.18",
+    "fs-extra": "^10.1.0",
+    "ts-node": "^10.9.1"
+  },
+  "dependencies": {
+    "@minecraft/server-ui": "^1.2.0-beta.1.20.10-stable"
   }
 }

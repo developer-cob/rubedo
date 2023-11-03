@@ -1,11 +1,23 @@
-import { system } from "@minecraft/server";
-import "./rubedo/lib/Command/index";
-import "./rubedo/lib/Chest GUI/index";
-import "./rubedo/database/index";
-import "./rubedo/lib/Containers/index";
-import "./vendor/import";
+import { Vector3, system } from "@minecraft/server";
+import { DynamicProperty } from "./lib/DynamicPropertyWrapper/DynamicProperty";
+import "./lib/Command/index";
+import "./modules/import"
 
-system.events.beforeWatchdogTerminate.subscribe((data) => {
+export const database = new DynamicProperty<{ [key: string]: any }>(
+  "db",
+  "object"
+).setWorldDynamic(true);
+
+system.beforeEvents.watchdogTerminate.subscribe((data) => {
   data.cancel = true;
   console.warn(`WATCHDOG TRIED TO CRASH = ${data.terminateReason}`);
 });
+
+/**
+ * Stores npc locations that are verified to allow NPC's to spawn in
+ */
+export let NPC_LOCATIONS: Array<Vector3> = [];
+
+export function clearNpcLocations() {
+  NPC_LOCATIONS = [];
+}

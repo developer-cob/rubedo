@@ -1,4 +1,4 @@
-# Rubedo Version 2.7.0-beta
+# Rubedo Version 3.0.0-beta
 
 Welcome to Rubedo, an anti-cheat designed to protect your world from cheaters. Rubedo is designed to be smarter than cheaters by giving users access to advanced tools to protect
 their world from hacked items, nuker, crashes, griefing, and so much more. Rubedo makes it possible to protect permissions and manage performance with the click of a button!

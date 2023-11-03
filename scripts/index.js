@@ -1,3 +1,3022 @@
-import{system as fr}from"@minecraft/server";import{world as oo}from"@minecraft/server";var I="-";import{world as to}from"@minecraft/server";import{ItemStack as Zn,MinecraftItemTypes as eo}from"@minecraft/server";import{BlockLocation as Qn}from"@minecraft/server";var vt=32e3,St=2e6,ne="database:database",T=new Qn(0,-64,0),Pt=128;import{BlockLocation as je,MinecraftDimensionTypes as U,system as At,world as q}from"@minecraft/server";var y={overworld:q.getDimension(U.overworld),nether:q.getDimension(U.nether),theEnd:q.getDimension(U.theEnd),"minecraft:overworld":q.getDimension(U.overworld),"minecraft:nether":q.getDimension(U.nether),"minecraft:the_end":q.getDimension(U.theEnd)};var xt={y:317098e-16,w:6048e5,d:864e5,h:36e5,m:6e4,s:1e3,ms:1};function oe(t){let e=t.split(","),n=0;for(let o of e){let r=parseInt(o.match(/\d+/)[0]),i=o.match(/[a-zA-Z]+/)[0];if(!xt[i])throw new Error(`Invalid duration unit: ${i}`);n+=xt[i]*r}return n}function W(t){return new Date(t).toString()}function we(t){return new je(Math.floor(t.x),Math.floor(t.y),Math.floor(t.z))}function Rt(t){return new Promise(e=>{let n=At.runSchedule(()=>{e(),At.clearRunSchedule(n)},t)})}function Mt(t,e){return t instanceof je||e instanceof je?~~t.x===~~e.x&&~~t.y===~~e.y&&~~t.z===~~e.z:t.x===e.x&&t.y===e.y&&t.z===e.z}function Xn(t,e){return[t.x,e.x]=[Math.min(t.x,e.x),Math.max(t.x,e.x)],[t.y,e.y]=[Math.min(t.y,e.y),Math.max(t.y,e.y)],[t.z,e.z]=[Math.min(t.z,e.z),Math.max(t.z,e.z)],[t,e]}function Ce(t,e,n){let[o,r]=Xn(e,n),{x:i,y:a,z:l}=t;return i>=o.x&&i<=r.x&&a>=o.y&&a<=r.y&&l>=o.z&&l<=r.z}function Nt(t,e,n){let o=[];for(let i=0;i<t.length;i+=e)o.push(t.slice(i,i+e));let r=[];for(let i of o)r.push(Array.from({length:Math.ceil(i.length/n)},(a,l)=>i.slice(l*n,(l+1)*n)));return r}import{system as Jn,world as Bt}from"@minecraft/server";var re={},Ye=!1;function Lt(){Ye=!0;for(let[t,e]of Object.entries(re))e(),delete re[t]}Jn.run(async()=>{try{await y.overworld.runCommandAsync("testfor @a"),Lt()}catch{let e=Bt.events.playerSpawn.subscribe(()=>{Lt(),Bt.events.playerSpawn.unsubscribe(e)})}});var C=class{static async awaitLoad(){if(!Ye)return new Promise(e=>{C.subscribe(e)})}static subscribe(e){let n=Object.keys(re).length;return Ye?(e(),n):(re[n]=e,n)}static unsubscribe(e){delete re[e]}};var h=class{constructor(e){this.tableName=e;this.tableName=e,this.MEMORY=null,this.QUEUE=[],this.onLoadCallback=null,C.subscribe(async()=>{let n=await this.initData();this.onLoadCallback(n),this.QUEUE.forEach(o=>o())})}static createTableEntity(e,n){let o=y.overworld.spawnEntity(ne,T);return o.setDynamicProperty("tableName",e),o.nameTag=`\xA7aDatabase Table: ${e}\xA7r`,n&&o.setDynamicProperty("index",n),o}static getTableEntities(e){return y.overworld.getEntitiesAtBlockLocation(T).filter(n=>n.typeId==ne&&n.getDynamicProperty("tableName")==e)}static despawnTableEntities(){return y.overworld.getEntitiesAtBlockLocation(T).map(e=>e.triggerEvent("despawn"))}async addQueueTask(){return new Promise(e=>{this.QUEUE.push(e)})}async saveData(){this.MEMORY||await this.addQueueTask();let e=h.getTableEntities(this.tableName),n=Nt(JSON.stringify(this.MEMORY),vt,St),o=Math.ceil(n.length/Pt)-e.length;if(o>0)for(let a=0;a<o;a++)e.push(h.createTableEntity(this.tableName));let r=0,i=0;for(;r<n.length;){let a=e[i];if(!a)continue;let l=a.getComponent("inventory").container;l.clearAll();for(let d=0;d<l.size&&r<n.length;d++){let g=n[r],b=new Zn(eo.acaciaBoat);b.setLore(g),l.setItem(d,b),r++}a.setDynamicProperty("index",i),i++}e.slice(i).forEach(a=>a?.triggerEvent("despawn"))}async initData(){let e=h.getTableEntities(this.tableName).sort((o,r)=>o.getDynamicProperty("index")-r.getDynamicProperty("index"));e.length==0&&console.warn(`[Database-Warning]: No data found for table ${this.tableName}!`);let n=[];for(let o of e){let r=o.getComponent("inventory").container;for(let i=0;i<r.size;i++){let a=r.getItem(i);a&&n.push(...a.getLore())}}return this.MEMORY=JSON.parse(n.join("")||"{}"),console.warn(`table ${this.tableName} memor ${this.MEMORY}`),this.MEMORY}async onLoad(e){this.onLoadCallback=e}async set(e,n){return this.MEMORY[e]=n,this.saveData()}get(e){if(!this.MEMORY)throw new Error("Entities not loaded! Consider using `getAsync` instead!");return this.MEMORY[e]}async getSync(e){return this.MEMORY?this.get(e):(await this.addQueueTask(),this.MEMORY[e])}keys(){if(!this.MEMORY)throw new Error("Entities not loaded! Consider using `keysSync` instead!");return Object.keys(this.MEMORY)}async keysSync(){return this.MEMORY?this.keys():(await this.addQueueTask(),Object.keys(this.MEMORY))}values(){if(!this.MEMORY)throw new Error("Entities not loaded! Consider using `valuesSync` instead!");return Object.values(this.MEMORY)}async valuesSync(){return this.MEMORY?this.values():(await this.addQueueTask(),Object.values(this.MEMORY))}has(e){if(!this.MEMORY)throw new Error("Entities not loaded! Consider using `hasSync` instead!");return Object.keys(this.MEMORY).includes(e)}async hasSync(e){return this.MEMORY?this.has(e):(await this.addQueueTask(),Object.keys(this.MEMORY).includes(e))}collection(){if(!this.MEMORY)throw new Error("Entities not loaded! Consider using `collectionSync` instead!");return this.MEMORY}async collectionSync(){return this.MEMORY?this.collection():(await this.addQueueTask(),this.MEMORY)}async delete(e){let n=delete this.MEMORY[e];return await this.saveData(),n}async clear(){return this.MEMORY={},await this.saveData()}};var s={config:new h("config"),freezes:new h("freezes"),mutes:new h("mutes"),bans:new h("bans"),regions:new h("regions"),roles:new h("roles"),tasks:new h("tasks"),npcs:new h("npcs"),ids:new h("ids"),logs:new h("logs"),protections:new h("protections")};function Dt(t){return[...to.getPlayers()].find(e=>e.name===t)}var D=class{constructor(e="literal"){this.name=e;this.typeName="literal";this.name=e}matches(e){return{success:this.name==e}}fail(e){return`${e} should be ${this.name}!`}},ie=class{constructor(e="string"){this.name=e;this.typeName="string";this.name=e}matches(e){return{success:e&&e!="",value:e}}fail(e){return"Value must be of type string!"}},se=class{constructor(e="integer"){this.name=e;this.typeName="int";this.name=e}matches(e){return{success:!isNaN(e),value:parseInt(e)}}fail(e){return"Value must be valid number!"}},Ge=class{constructor(e="float"){this.name=e;this.typeName="float";this.name=e}matches(e){return{success:Boolean(e?.match(/^\d+\.\d+$/)?.[0]),value:parseInt(e)}}fail(e){return"Value must be valid float!"}},F=class{constructor(e="location"){this.name=e;this.typeName="location";this.name=e}matches(e){return{success:/^([~^]{0,1}(-\d)?(\d*)?(\.(\d+))?)$/.test(e),value:e}}fail(e){return"Value needs to be a valid number, value can include: [~,^]"}},ae=class{constructor(e="boolean"){this.name=e;this.typeName="boolean";this.name=e}matches(e){return{success:Boolean(e?.match(/^(true|false)$/)?.[0]),value:e=="true"}}fail(e){return`"${e}" can be either "true" or "false"`}},Ke=class{constructor(e="player"){this.name=e;this.typeName="Player";this.name=e}matches(e){return{success:!!Dt(e),value:Dt(e)}}fail(e){return`player: "${e}", is not in this world`}},He=class{constructor(e="target"){this.name=e;this.typeName="Target";this.name=e}matches(e){return{success:Boolean(e?.match(/^(@.|"[\s\S]+")$/)?.[0]),value:e}}fail(e){return`${e} is not a valid target`}},le=class{constructor(e="array",n){this.name=e;this.types=n;this.typeName="string";this.name=e,this.types=n,this.typeName=n.join(" | ").replace(/(.{25})..+/,"$1...")}matches(e){return{success:this.types.includes(e),value:e}}fail(e){return`"${e}" must be one of these values: ${this.types.join(" | ")}`}},Ue=class{constructor(e){this.name=e;this.typeName="Duration"}matches(e){return{success:/^(\d+[hdysmw],?)+$/.test(e),value:e}}fail(e){return`"${e}" must be a value like "10d" or "3s" the first part is the length second is unit`}},qe=class{constructor(e="playerName"){this.name=e;this.typeName="playerName";this.name=e}matches(e){return{success:!!s.ids.get(e),value:e}}fail(e){return`player: "${e}" has never played this world before! Tip: if the name has spaces in it use quotes around name!`}},p={string:ie,int:se,float:Ge,location:F,boolean:ae,player:Ke,target:He,array:le,duration:Ue,playerName:qe};var Ee=class{constructor(e){this.data=e,this.sender=e.sender}reply(e){this.sender.tell(e)}};function Ot(t,e){try{return t.slice(e.length).trim().match(/"[^"]+"|[^\s]+/g).map(n=>n.replace(/"(.+)"/,"$1").toString())}catch{return[]}}function _t(t,e){t.tell({rawtext:[{text:"\xA7c"},{translate:"commands.generic.unknown",with:[`${e}`]}]})}function We(t,e){t.tell({rawtext:[{text:e.data.invalidPermission?e.data.invalidPermission:`\xA7cYou do not have permission to use "${e.data.name}"`}]})}function $t(t,e,n,o,r){if(t.tell({rawtext:[{text:"\xA7c"},{translate:"commands.generic.syntax",with:[`${I}${e.data.name} ${o.slice(0,r).join(" ")}`,o[r]??" ",o.slice(r+1).join(" ")]}]}),n.children.length>1||!o[r]){let i=n.children.map(a=>a.type instanceof D?a.type.name:a.type?.typeName);t.tell(`\xA7c"${o[r]??"undefined"}" is not valid! Argument "${[...new Set(n.children.map(a=>a.type.name))][0]}" can be typeof: "${i.join('", "')}"`)}else t.tell(`\xA7c${n.children[0]?.type?.fail(o[r])}`)}function no([t,e,n],{location:o,viewDirection:r}){if(!t||!e||!t)return null;let i=[o.x,o.y,o.z],a=[r.x,r.y,r.z],l=[t,e,n].map(g=>{let b=parseFloat(g);return isNaN(b)?0:b}),d=[t,e,n].map((g,b)=>g.includes("~")?l[b]+i[b]:g.includes("^")?l[b]+a[b]:l[b]);return{x:d[0],y:d[1],z:d[2]}}function Ft(t,e,n,o){let r=e[e.length-1]??o,i=[];for(let[a,l]of e.entries())if(!l.type.name.endsWith("*")){if(l.type instanceof F){i.push(no([t[a],t[a+1],t[a+2]],n.sender));continue}l.type instanceof D||i.push(l.type.matches(t[a]).value??t[a])}r.callback(new Ee(n),...i)}var z=[];oo.events.beforeChat.subscribe(t=>{if(!t.message.startsWith(I))return;t.cancel=!0;let e=Ot(t.message,I),n=z.find(l=>l.depth==0&&(l.data.name==e[0]||l.data?.aliases?.includes(e[0]))),o={message:t.message,sendToTargets:t.sendToTargets,sender:t.sender,targets:t.targets};if(!n)return _t(t.sender,e[0]);if(!n.data?.requires(t.sender))return We(o.sender,n);e.shift();let r=[],i=(l,d)=>{if(l.children.length>0){let g=l.children.find(b=>b.type.matches(e[d]).success);return!g&&!e[d]&&l.callback?void 0:g?g.data?.requires(o.sender)?(r.push(g),i(g,d+1)):(We(o.sender,g),"fail"):($t(o.sender,n,l,e,d),"fail")}};i(n,0)!="fail"&&Ft(e,r,o,n)});import{ItemStack as fo,MinecraftItemTypes as go,system as nn,world as yo}from"@minecraft/server";var zt="rubedo:gui",ce="rubedo:inventory";import{system as Kt}from"@minecraft/server";import{system as ro}from"@minecraft/server";var Qe={},Vt={},O={};function io(t,e,n){if(e.length!=n.length)return[];let o=[];for(let r=0;r<n.length;r++){if(e[r]?.item?.amount<n[r]?.item?.amount||e[r]?.item?.amount>n[r]?.item?.amount&&e[r]?.item?.amount!=0){let i={slot:r,uid:n[r].uid,oldUid:e[r].uid,item:n[r].item,oldItem:e[r].item,changeType:"fluctuation"};o.push(i),O[t.id]=i;continue}if(n[r].uid!=e[r].uid)if(e[r]?.item&&n[r]?.item){let i={slot:r,uid:n[r].uid,oldUid:e[r].uid,item:n[r].item,oldItem:e[r].item,changeType:"swap"};o.push(i),O[t.id]=i}else if(n[r]?.item){if(n[r]?.item)if(O[t.id]?.changeType=="delete"&&O[t.id]?.uid==n[r].uid){let i={slot:r,uid:n[r].uid,item:n[r].item,changeType:"move"};o.push(i),O[t.id]=i;continue}else{let i={slot:r,uid:n[r].uid,item:n[r].item,changeType:"put"};o.push(i),O[t.id]=i}}else{let i={slot:r,uid:e[r].uid,item:e[r].item,changeType:"delete"};o.push(i),O[t.id]=i}}return o}function so(t){if(!t)return"";let e=[];return e.push(t.typeId),e.push(t.nameTag),e.push(t.data),e.push(t.getLore().join("")),e.join("")}function ao(t){let e=[];for(let n=0;n<t.size;n++){let o=t.getItem(n);e[n]={uid:so(o),item:o}}return e}ro.runSchedule(()=>{for(let t of Object.values(Qe))for(let e of y.overworld.getEntities(t.entities)){let n=ao(e.getComponent("inventory").container),o=io(e,Vt[e.id]??n,n);if(Vt[e.id]=n,o.length!=0){if(e.hasTag("skipCheck")){e.removeTag("skipCheck"),delete O[e.id];continue}for(let r of o)t.callback(e,r)}}},5);var me=class{static subscribe(e,n){let o=Date.now();return Qe[o]={callback:n,entities:e},o}static unsubscribe(e){delete Qe[e]}};import{Location as lo}from"@minecraft/server";var P={},Q={};function jt(t){return t.getComponent("minecraft:inventory").container.getItem(t.selectedSlot)}async function Yt(t,e){try{let n=t.getComponent("minecraft:inventory").container,o=[];for(let r=0;r<n.size;r++){let i=n.getItem(r);!i||i?.typeId==e?.typeId&&(o.push({slot:r,item:i}),n.setItem,r<9?t.runCommandAsync(`replaceitem entity @s slot.hotbar ${r} air`):t.runCommandAsync(`replaceitem entity @s slot.inventory ${r-9} air`))}await t.runCommandAsync(`clear @s ${e?.typeId} ${e.data} ${e.amount}`);for(let r of o)n.setItem(r.slot,r.item)}catch{[...t.dimension.getEntities({type:"minecraft:item",location:new lo(t.location.x,t.location.y,t.location.z),maxDistance:2,closest:1})].forEach(o=>o.kill())}}function Gt(t,e){return t.getComponent("minecraft:inventory").container.getItem(e)}var Te=class{constructor(e,n,o){this.gui=e,this.slot=n,this.change=o}message(e){this.gui.player.tell(e)}getItemAdded(){return this.slot.item?null:this.gui.entity.getComponent("minecraft:inventory").container.getItem(this.change.slot)}GiveAction(e=this.slot.item.itemStack){this.gui.player.getComponent("minecraft:inventory").container.addItem(e)}TakeAction(e=null){this.gui.player.getComponent("minecraft:inventory").container.addItem(this.slot.item.itemStack),this.gui.page.slots[this.change.slot]=null,e&&e.delete(this.slot.item.components.dbKey)}PageAction(e,n){this.gui.setPage(e,n)}CloseAction(){this.gui.despawn()}SetAction(){this.gui.entity.getComponent("minecraft:inventory").container.setItem(this.change.slot,this.slot.item.itemStack)}async FormAction(e){return this.CloseAction(),await Rt(5),await e.show(this.gui.player)}};var X=class{static spawnEntity(e){try{return e.dimension.spawnEntity(ce,e.headLocation)}catch{return null}}constructor(e){this.player=e,this.entity=X.spawnEntity(e),this.entity&&(this.hasChestOpen=!1,this.setPage("home")),this.runScheduleId=Kt.runSchedule(()=>{if(!this.entity)return this.despawn();if(this.player.getComponent("mark_variant").value==1)this.hasChestOpen||(this.slotChangeEvent=me.subscribe({type:ce},(n,o)=>{n.id==this.entity.id&&this.onSlotChange(o)})),this.hasChestOpen=!0;else try{this.entity.teleport(this.player.headLocation,this.player.dimension,this.player.rotation.x,this.player.rotation.y,!0)}catch{this.despawn()}},5)}setPage(e,n){let o=this.entity.getComponent("inventory").container;for(let i=0;i<o.size;i++)o.setItem(i,M);if(!Object.keys(Q).includes(e))throw new Error(`pageId ${e} does not exist!`);let r=Q[e];this.page=r,r.fillType(this.entity,r,n),this.entity.nameTag="size:54"}onSlotChange(e){let n=this.page.slots[e.slot];if(!n)this.entity.getComponent("inventory").container.setItem(e.slot,M);else if(e.changeType=="delete"){if(n.item&&Yt(this.player,e.item),!n.item&&!Gt(this.entity,e.slot))return;n.action(new Te(this,n,e))}}despawn(){try{this.entity?.triggerEvent("despawn")}catch{}try{delete P[this.player.name]}catch{}this.runScheduleId&&Kt.clearRunSchedule(this.runScheduleId),this.slotChangeEvent&&me.unsubscribe(this.slotChangeEvent)}};import{ItemStack as co}from"@minecraft/server";var E=class{constructor(e,n={},o){this.itemType=e,this.components=n,this.setItemStack=o}get itemStack(){if(this.setItemStack)return this.setItemStack;let e=new co(this.itemType);if(this.components){e.amount=this.components?.amount??1,e.data=this.components?.data??0,e.nameTag=this.components?.nameTag,e.setLore(this.components?.loreList??[]);let n=e.getComponent("enchantments").enchantments;for(let o of this.components?.enchantments??[])n.addEnchantment(o);e.getComponent("enchantments").enchantments=n}return e}};function Ht(t,e,n){let o=t.getComponent("minecraft:inventory").container;for(let r=0;r<o.size;r++){let i=e.slots[r];if(!i||!i.item){o.setItem(r,M);continue}o.setItem(r,i.item.itemStack)}}var V=class{constructor(e,n=Ht){if(Object.keys(Q).includes(e))throw new Error(`Page: ${e}, Already exists!`);this.id=e,this.fillType=n,this.slots=[],Q[e]=this}setSlots(e,n,o){let r=n?{item:n,action:o}:null;for(let i of e)this.slots[i]=r;return this}};import{MinecraftItemTypes as Ut}from"@minecraft/server";var Bi=new V("home").setSlots([22],new E(Ut.enderChest,{nameTag:"\xA7l\xA7bInventory Viewer"}),t=>{t.PageAction("moderation:see")}).setSlots([54],new E(Ut.barrier,{nameTag:"\xA7cClose GUI"}),t=>{t.CloseAction()});import{world as Y,Player as uo,BlockLocation as en,MinecraftBlockTypes as po,GameMode as Zi}from"@minecraft/server";import{BlockLocation as Xt,MinecraftBlockTypes as mo}from"@minecraft/server";var qt={doorsAndSwitches:!0,openContainers:!0,pvp:!1,allowedEntities:["minecraft:player","minecraft:npc","minecraft:item","rubedo:inventory","rubedo:database"]},Wt=["minecraft:acacia_door","minecraft:acacia_trapdoor","minecraft:acacia_button","minecraft:birch_door","minecraft:birch_trapdoor","minecraft:birch_button","minecraft:crimson_door","minecraft:crimson_trapdoor","minecraft:crimson_button","minecraft:dark_oak_door","minecraft:dark_oak_trapdoor","minecraft:dark_oak_button","minecraft:jungle_door","minecraft:jungle_trapdoor","minecraft:jungle_button","minecraft:mangrove_door","minecraft:mangrove_trapdoor","minecraft:mangrove_button","minecraft:spruce_door","minecraft:spruce_trapdoor","minecraft:spruce_button","minecraft:warped_door","minecraft:warped_trapdoor","minecraft:warped_button","minecraft:wooden_door","minecraft:wooden_button","minecraft:trapdoor","minecraft:iron_door","minecraft:iron_trapdoor","minecraft:polished_blackstone_button","minecraft:lever"],Qt=["minecraft:chest","minecraft:ender_chest","minecraft:barrel","minecraft:trapped_chest","minecraft:dispenser","minecraft:dropper","minecraft:furnace","minecraft:blast_furnace","minecraft:lit_furnace","minecraft:lit_blast_furnace","minecraft:hopper","minecraft:shulker_box","minecraft:undyed_shulker_box","minecraft:lit_smoker","minecraft:smoker"];var j=[],ve=!1,Xe=-64,Je=320,f=class{static async getAllRegionsSync(){if(ve)return j;let e=(await s.regions.valuesSync()).map(n=>new f(n.from,n.to,n.dimensionId,n.permissions,n.key));return e.forEach(n=>{j.push(n)}),ve=!0,e}static getAllRegions(){if(ve)return j;let e=s.regions.values().map(n=>new f(n.from,n.to,n.dimensionId,n.permissions,n.key));return e.forEach(n=>{j.push(n)}),ve=!0,e}static blockLocationInRegion(e,n){return this.getAllRegions().find(o=>o.dimensionId==n&&Ce(e,{x:o.from.x,y:Xe,z:o.from.z},{x:o.to.x,y:Je,z:o.to.z}))}static async blockLocationInRegionSync(e,n){return(await this.getAllRegionsSync()).find(o=>o.dimensionId==n&&Ce(e,{x:o.from.x,y:Xe,z:o.from.z},{x:o.to.x,y:Je,z:o.to.z}))}static async removeRegionAtBlockLocation(e,n){let o=this.blockLocationInRegion(e,n);return o?s.regions.delete(o.key):!1}constructor(e,n,o,r,i){this.from=e,this.to=n,this.dimensionId=o,this.permissions=r??qt,this.key=i||Date.now().toString(),i||this.update().then(()=>{Se(),j.push(this)})}async update(){return s.regions.set(this.key,{key:this.key,from:this.from,dimensionId:this.dimensionId,permissions:this.permissions,to:this.to})}async delete(){let e=s.regions.get(this.key),n=new Xt(e.from.x,e.dimensionId=="minecraft:overworld"?-64:0,e.from.z),o=new Xt(e.to.x,e.dimensionId=="minecraft:overworld"?-64:0,e.to.z);for(let r of n.blocksBetween(o))y[e.dimensionId].getBlock(r)?.setType(mo.bedrock);return j=j.filter(r=>r.key!=this.key),s.regions.delete(this.key)}entityInRegion(e){return this.dimensionId==e.dimension.id&&Ce(e.location,{x:this.from.x,y:Xe,z:this.from.z},{x:this.to.x,y:Je,z:this.to.z})}changePermission(e,n){this.permissions[e]=n,this.update()}};var N=class{static getTasks(){return s.tasks.get("changePlayerRole")??[]}static getPlayersRoleToSet(e){return N.getTasks().find(o=>o.playerName==e)?.role}constructor(e,n){let o=N.getTasks();o.push({playerName:e,role:n}),s.tasks.set("changePlayerRole",o)}};import{MinecraftBlockTypes as Ze,MinecraftItemTypes as u}from"@minecraft/server";var Pe="https://discord.gg/dMa3A5UYKX",Hi=[u.beehive.id,u.beeNest.id,u.axolotlBucket.id,u.codBucket.id,u.tadpoleBucket.id,u.tropicalFishBucket.id,u.salmonBucket.id,u.pufferfishBucket.id],Jt=[u.allow.id,u.barrier.id,u.borderBlock.id,u.debugStick?.id??"minecraft:debug_stick",u.deny.id,u.jigsaw.id,u.lightBlock.id,u.commandBlock.id,u.repeatingCommandBlock.id,u.chainCommandBlock.id,u.commandBlockMinecart.id,u.structureBlock.id,u.structureVoid.id,u.bedrock.id,u.endPortalFrame.id,"minecraft:info_update","minecraft:info_update2","minecraft:reserved3","minecraft:reserved4","minecraft:reserved6","minecraft:movingBlock","minecraft:moving_block","minecraft:movingblock","minecraft:piston_arm_collision","minecraft:piston_arm_collision","minecraft:pistonarmcollision","minecraft:stickyPistonArmCollision","minecraft:sticky_piston_arm_collision","minecraft:unknown","minecraft:glowingobsidian","minecraft:invisible_bedrock","minecraft:invisiblebedrock","minecraft:netherreactor","minecraft:portal","minecraft:fire","minecraft:water","minecraft:lava","minecraft:flowing_lava","minecraft:flowing_water","minecraft:soul_fire"],Ui=[Ze.dispenser.id],Zt=[Ze.bedrock.id,Ze.barrier.id,"minecraft:invisiblebedrock","minecraft:movingBlock","minecraft:movingblock","minecraft:moving_block"],qi=[u.chest.id,u.trappedChest.id,u.barrel.id,u.dispenser.id,u.dropper.id,u.furnace.id,"minecraft:lit_furnace",u.blastFurnace.id,"minecraft:lit_blast_furnace",u.smoker.id,"minecraft:lit_smoker",u.hopper.id,u.shulkerBox.id,u.undyedShulkerBox.id];var Ae={aquaAffinity:1,baneOfArthropods:5,binding:1,blastProtection:4,channeling:1,depthStrider:3,efficiency:5,featherFalling:4,fireAspect:2,fireProtection:4,flame:1,fortune:3,frostWalker:2,impaling:5,infinity:1,knockback:2,looting:3,loyalty:4,luckOfTheSea:3,lure:3,mending:1,multishot:1,piercing:4,power:5,projectileProtection:4,protection:4,punch:2,quickCharge:3,respiration:3,riptide:3,sharpness:5,silkTouch:1,smite:5,soulSpeed:3,swiftSneak:4,thorns:3,unbreaking:3,vanishing:1};function _(t,e=[],n){if(ue(t))return console.warn("[WARNING]: TRIED TO KICK OWNER"),t.tell("You have been tried to kick, but you cant!"),n?.();try{t.runCommandAsync(`kick "${t.name}" \xA7r${e.join(`
-`)}`),t.triggerEvent("kick")}catch(o){if(t.triggerEvent("kick"),!/"statusCode":-2147352576/.test(o))return;n&&n()}}function c(t){return t instanceof uo?s.roles.get(t.name)??"member":s.roles.get(t)??"member"}function J(t,e){if(typeof t=="string"){s.roles.set(t,e);let n=[...Y.getPlayers()].find(o=>o.name==t);n?n.setDynamicProperty("role",e):new N(t,e)}else s.roles.set(t.name,e),t.setDynamicProperty("role",e)}function ue(t){return Y.getDynamicProperty("worldsOwner")==t.id}function et(){let t=Y.getDynamicProperty("worldsOwner");return!t||t==""?null:t}function tn(){let t=et();if(!t)return null;let e=s.ids.collection();return Object.keys(e).find(n=>e[n]===t)}function de(t){if(!t)return Y.setDynamicProperty("worldsOwner","");Y.setDynamicProperty("worldsOwner",t.id.toString())}function xe(){return Y.getDynamicProperty("isLockDown")??!1}function tt(t){Y.setDynamicProperty("isLockDown",t)}function Se(){for(let t of f.getAllRegions()){let e=new en(t.from.x,t.dimensionId=="minecraft:overworld"?-64:0,t.from.z),n=new en(t.to.x,t.dimensionId=="minecraft:overworld"?-64:0,t.to.z);for(let o of e.blocksBetween(n))y[t.dimensionId].getBlock(o)?.setType(po.deny)}}function A(t){switch(t){case"banned_items":return s.config.get("banned_items")??Jt;case"banned_blocks":return s.config.get("banned_blocks")??Zt;case"enchantments":return s.config.get("enchantments")??Ae;case"appealLink":return s.config.get("appealLink")??Pe}}function G(t,e){s.config.set(t,e)}var M=new fo(go.acaciaBoat,0);C.subscribe(()=>{nn.runSchedule(()=>{for(let t of yo.getPlayers()){if(jt(t)?.typeId!=zt){P[t.name]&&P[t.name].despawn();continue}Object.keys(P).includes(t?.name)||c(t)=="admin"&&(P[t.name]=new X(t))}},10)});nn.runSchedule(()=>{let t=Object.values(P).map(e=>e.entity.id);for(let e of y.overworld.getEntities({type:ce}))t.includes(e.id)||e.triggerEvent("despawn")},100);import{DynamicPropertiesDefinition as ho,EntityTypes as bo,world as ko}from"@minecraft/server";ko.events.worldInitialize.subscribe(({propertyRegistry:t})=>{y.overworld.runCommandAsync(`tickingarea add ${T.x} ${T.y} ${T.z} ${T.x} ${T.y} ${T.z} db true`);let e=new ho;e.defineString("tableName",30),e.defineNumber("index"),t.registerEntityTypeDynamicProperties(e,bo.get(ne))});import{system as Io,world as wo}from"@minecraft/server";import{MinecraftBlockTypes as on}from"@minecraft/server";var Re=[on.chest.id,on.trappedChest.id],K={x:7,y:7,z:7};var Me=class{constructor(e){this.emptySlotsCount=e.emptySlotsCount,this.size=e.size,this.items=[];for(let n=0;n<this.size;n++)this.items[n]=e.getItem(n)}load(e){for(let n=0;n<e.size;n++)!this.items[n]||e.setItem(n,this.items[n])}};var Ne={};Io.runSchedule(()=>{Ne={};for(let t of wo.getPlayers()){if(t.dimension.id!="minecraft:overworld")continue;let e=we(t.location),n=e.offset(K.x,K.y,K.z),o=e.offset(-K.x,-K.y,-K.z);for(let r of n.blocksBetween(o)){if(r.y<-64)continue;let i=t.dimension.getBlock(r);!i||!Re.includes(i.typeId)||(Ne[JSON.stringify(r)]=new Me(i.getComponent("inventory").container))}}},100);var pe={};s.protections.onLoad(()=>{for(let t of Object.values(pe))!t.getConfig().enabled||t.enable()});import{Player as sn}from"@minecraft/server";function rn(t,e,n,o="No Reason",r="Rubedo Auto Mod"){let i={key:e,playerName:t instanceof sn?t.name:t,date:Date.now(),duration:n?oe(n):null,expire:n?oe(n)+Date.now():null,reason:o,by:r};s.bans.set(e,i)}var $=class{constructor(e,n,o="No Reason",r="Rubedo Auto Mod"){e instanceof sn?rn(e,e.id,n,o,r):rn(e,s.ids.get(e),n,o,r)}};import{MessageFormData as Co}from"@minecraft/server-ui";var Z=class{constructor(e,n){this.title=e,this.body=n,this.form=new Co,e&&this.form.title(e),n&&this.form.body(n),this.triedToShow=0}setButton1(e,n){return this.button1={text:e,callback:n},this.form.button1(e),this}setButton2(e,n){return this.button2={text:e,callback:n},this.form.button2(e),this}show(e){this.form.show(e).then(n=>{if(n.canceled){if(n.cancelationReason=="userBusy"){if(this.triedToShow>200)return e.tell("\xA7cForm Timeout: tried to show form, but you were busy (close chat after running command)");this.triedToShow++,this.show(e)}return}n.selection==1&&this.button1?.callback?.(),n.selection==0&&this.button2?.callback?.()})}};function H(t,e,n,o=()=>{}){new Z("Confirm To Continue",e).setButton1("Confirm",n).setButton2("Never Mind",o).show(t)}var m=class{constructor(e,n,o=0,r){this.data=e;this.type=n;this.depth=o;this.parent=r;e.requires||(e.requires=i=>!0),this.data=e,this.type=n??new D(this.data.name),this.children=[],this.depth=o,this.parent=r,this.callback=null,z.push(this)}argument(e){let n=new m(this.data,e,this.depth+1,this);return this.children.push(n),n}string(e){return this.argument(new ie(e))}int(e){return this.argument(new se(e))}array(e,n){return this.argument(new le(e,n))}boolean(e){return this.argument(new ae(e))}location(e){let n=this.argument(new F(e));return e.endsWith("*")?n:n.location(e+"_y*").location(e+"_z*")}literal(e){let n=new m(e,new D(e.name),this.depth+1,this);return this.children.push(n),n}executes(e){return this.callback=e,this}};var w={"api.name":()=>"Smelly API","api.error.unknown":()=>"An unknown error has occurred.","api.database.error.table_name":(t,e)=>`The display name ${t} is too long for an objective, it can be at most ${e} characters long`,"api.utilities.formatter.error.ms":t=>`${t} is not a string or a number`,"api.Providers.form.invalidType":(t,e)=>`Type ${t} is not a valid type to add a ${e}`,"modules.protections.cps.clickingToFast":()=>"You are clicking to fast! Please click slower!","modules.managers.mute.isMuted":()=>"\xA7cYou've been temporarily muted in chat.","modules.commands.ban.reply":(t,e,n="")=>`\xA7cBanned \xA7f"\xA7a${t}\xA7f" \xA7cfor ${e} Because: "${n??"No reason Provided"}" \xA7aSuccessfully`,"lockdown.kick.message":()=>["\xA7cYou have been kicked!","\xA7aReason: \xA7fServer is currently under LockDown","\xA7fServer will be up soon, Try to join later"],"commands.ban.list.player":(t,e,n)=>`- "${t}" Because: ${e}, Expiry ${n}`,"commands.freeze.list.player":(t,e)=>`- "${t}" Because: ${e}`,"commands.mutes.list.player":(t,e,n)=>`- "${t}" Because: ${e}, Expiry: ${n}`,"commands.lockdown.confirm":"Are you sure you want to lockdown the server, this will kick all active players and all players who try to join who are not admin"};function nt(t,e,n,o,r){if(s.bans.get(s.ids.get(e)))return t.reply(`\xA7c${e} is already banned`);t.reply("\xA7aClose chat to confirm"),H(t.sender,`Are you sure you want to ban ${e}, for ${n??"forever"}`,()=>{new $(e,n,o,t.sender.name),t.reply(w["modules.commands.ban.reply"](e,n,o))})}var ot=new m({name:"ban",description:"Manage bans",requires:t=>["admin","moderator"].includes(c(t))});ot.literal({name:"add",description:"Bans a player"}).argument(new p.playerName).executes((t,e)=>{nt(t,e,null,null,t.sender.name)}).argument(new p.duration("duration")).executes((t,e,n)=>{nt(t,e,n,null,t.sender.name)}).string("reason").executes((t,e,n,o)=>{nt(t,e,n,o,t.sender.name)});ot.literal({name:"remove",description:"un-bans a player"}).argument(new p.playerName("playerName")).executes((t,e)=>{let n=s.bans.values().find(o=>o.playerName==e);if(!n)return t.reply(`${e} is not banned`);s.bans.delete(n.key)?t.reply(`\xA7a${e}\xA7r has been Unbanned!`):t.reply(`\xA7cFailed to un-ban ${e}`)});ot.literal({name:"list",description:"Lists all bans"}).executes(t=>{let e=s.bans.values();if(e.length==0)return t.sender.tell("\xA7cNo one is banned!");t.sender.tell(`\xA72--- Showing Bans (${e.length}) ---`);for(let n of e)t.sender.tell(w["commands.ban.list.player"](n.playerName,n.reason,n.expire?W(n.duration):"Forever"))});var ge=new m({name:"database",description:"Interacts with SA Database",aliases:["db"],requires:t=>c(t)=="admin"});ge.literal({name:"get"}).string("table").string("key").executes((t,e,n)=>{try{let o=s[e].get(n);o?t.reply(JSON.stringify(o)):t.reply(`No data could be found for key ${n}`)}catch(o){t.reply(o+o.stack)}});ge.literal({name:"set"}).string("table").string("key").string("value").executes((t,e,n,o)=>{try{s[e].set(n,o),t.reply(`Set Key: "${n}", to value: "${o}" on table: "${e}"`)}catch(r){t.reply(r+r.stack)}});ge.literal({name:"clear"}).string("table").executes((t,e)=>{try{s[e].clear(),t.reply(`Cleared Table ${e}`)}catch(n){t.reply(n+n.stack)}});ge.literal({name:"keys",description:"Returns all keys on a database"}).string("table").executes((t,e)=>{try{let n=s[e].keys();t.reply(`Keys on database: ${e}: ${n}`)}catch(n){t.reply(n+n.stack)}});ge.literal({name:"values",description:"Returns all values on a database"}).string("table").executes((t,e)=>{try{let n=s[e].values();t.reply(`Values on database: ${e}: ${JSON.stringify(n,null,2)}`)}catch(n){n instanceof TypeError?t.reply(`No values on database ${e}`):t.reply(n+n.stack)}});new m({name:"ecwipe",description:"Clears a players ender chest",requires:t=>c(t)=="admin"}).argument(new p.player("player")).executes((t,e)=>{for(let n=0;n<27;n++)e.runCommandAsync(`replaceitem entity @s slot.enderchest ${n} air`);t.reply(`\xA7aCleared "${e.name}"'s Ender chest!`)});var Be=class{constructor(e,n="No Reason"){let o={playerName:e.name,key:e.id,reason:n,location:{x:e.location.x,y:e.location.y,z:e.location.z,dimension:e.dimension.id}};s.freezes.set(e.id,o)}};var rt=new m({name:"freeze",description:"Manage Freezes",requires:t=>["admin","moderator"].includes(c(t))});rt.literal({name:"add",description:"Freezes a player"}).argument(new p.player("player")).string("reason").executes((t,e,n)=>{new Be(e,n),t.reply(`\xA7cFroze \xA7f"\xA7a${e.name}\xA7f" Because: "${n}" \xA7aSuccessfully`),t.sender.tell(`\xA7cYou have been frozen by \xA7f"\xA7a${t.sender.name}\xA7f" Because: "${n}"`)});rt.literal({name:"remove",description:"unfreezes a player"}).argument(new p.playerName("playerName")).executes((t,e)=>{let n=s.freezes.values().find(o=>o.playerName==e);if(!n)return t.reply(`${e} is not frozen`);s.freezes.delete(n.key),t.reply(`\xA7a${e}\xA7r has been UnFrozen!`)});rt.literal({name:"list",description:"Lists all freezes"}).executes(t=>{let e=s.freezes.values();if(e.length==0)return t.sender.tell("\xA7cNo one is frozen!");t.sender.tell(`\xA72--- Showing Freezes (${e.length}) ---`);for(let n of e)t.sender.tell(w["commands.freeze.list.player"](n.playerName,n.reason))});var it=class{constructor(e){this.name=e;this.typeName="CommandName"}matches(e){return{success:Boolean(z.find(n=>n.depth==0&&n.data.name==e)),value:e}}fail(e){return`"${e}" is not a valid command`}};function Eo(t,e,n){n.tell(`${I}${t.data.name} ${e.map(o=>o.type.typeName=="literal"?o.data.name:`<${o.type.name}: ${o.type.typeName}>`).join(" ")}`)}function Le(t,e,n,o){if(!!e.data?.requires(o)&&(e.callback&&Eo(t,e.depth==0?n:n.concat(e),o),e.children.length>0))for(let r of e.children)Le(t,r,e.depth==0?n:n.concat(e),o)}function an(t,e,n){t.tell(`\xA72--- Showing help page ${e} of ${n} (${I}help <page: int>) ---`)}function st(t){return z.filter(e=>e.depth==0&&e.data?.requires(t))}function ln(t){let e=st(t);return e.length==0?0:Math.ceil(e.length/5)}var cn=new m({name:"help",description:"Provides help/list of commands.",aliases:["?","h"]}).executes(t=>{let e=ln(t.sender),n=st(t.sender).slice(1*5-5,1*5);an(t.sender,1,e);for(let o of n)Le(o,o,[],t.sender)});cn.int("page").executes((t,e)=>{let n=ln(t.sender);e>n&&(e=n);let o=st(t.sender).slice(e*5-5,e*5);an(t.sender,e,n);for(let r of o)Le(r,r,[],t.sender)});cn.argument(new it("command")).executes((t,e)=>{let n=z.filter(o=>o.depth==0&&o.data.name==e)[0];t.sender.tell(`\xA7e${n.data.name}: ${n.data.aliases?`aliases (${n.data.aliases.join(", ")})`:""}`),t.sender.tell(`\xA7e${n.data.description}`),t.sender.tell("Usage:"),Le(n,n,[],t.sender)});import{world as mn}from"@minecraft/server";new m({name:"lockdown",description:"Toggles the servers lockdown, meaning no one can join",requires:t=>c(t)=="admin"}).executes(t=>{xe()?(tt(!1),t.sender.tell("\xA7aUnlocked the server!")):(t.reply("\xA7aClose chat to confirm lockdown"),H(t.sender,w["commands.lockdown.confirm"],()=>{tt(!0);for(let e of mn.getPlayers())c(e)!="admin"&&_(e,w["lockdown.kick.message"]());mn.say("\xA7l\xA7cServer is now LOCKED!")}))});var x=class{static getMuteData(e){return s.mutes.get(e.name)}constructor(e,n,o="No Reason",r="Rubedo Auto Mod"){let i=n?oe(n):null,a={playerName:e.name,date:Date.now(),duration:i,expire:i?i+Date.now():null,reason:o,by:r};s.mutes.set(e.name,a)}};var at=new m({name:"mute",description:"Manage Mutes",requires:t=>["admin","moderator"].includes(c(t))});at.literal({name:"add",description:"Mutes a player"}).argument(new p.player("player")).argument(new p.duration("duration")).string("reason").executes((t,e,n,o)=>{new x(e,n,o,t.sender.name),t.reply(`\xA7cMuted \xA7f"\xA7a${e.name}\xA7f" \xA7cfor ${n} Because: "${o}" \xA7aSuccessfully`),e.tell(`\xA7cYou have been muted by \xA7f"${t.sender.name}" \xA7cfor ${n} Because: "${o}"`)});at.literal({name:"remove",description:"un-mutes a player"}).argument(new p.playerName("playerName")).executes((t,e)=>{let n=s.mutes.values().find(o=>o.playerName==e);if(!n)return t.reply(`${e} is not muted!`);s.mutes.delete(n.playerName);try{t.sender.runCommandAsync(`ability "${e}" mute false`)}catch{}t.reply(`\xA7a${e}\xA7r has been UnMuted!`)});at.literal({name:"list",description:"Lists all freezes"}).executes(t=>{let e=s.mutes.values();if(e.length==0)return t.sender.tell("\xA7cNo one is muted!");t.sender.tell(`\xA72--- Showing Mutes (${e.length}) ---`);for(let n of e)t.sender.tell(w["commands.mutes.list.player"](n.playerName,n.reason,n.expire?W(n.expire):"Forever"))});import{Location as To}from"@minecraft/server";var De=class{static isValid(e){return e.typeId!="minecraft:npc"?!1:Oe.find(n=>Mt(n,e.location))?!0:!!s.npcs.keys().find(n=>e.id==n)}constructor(e,n){Oe.push(e);let o=n.spawnEntity("minecraft:npc",e),r={dimension:o.dimension.id,x:o.location.x,y:o.location.y,z:o.location.z};s.npcs.set(o.id,r),un()}};new m({name:"npc",description:"Spawns a npc at your coordinates",requires:t=>c(t)=="admin"}).executes(t=>{let{x:e,y:n,z:o}=t.sender.location;new De(new To(e,n,o),t.sender.dimension),t.reply("Spawned a verified npc at your current location")});import{system as dn}from"@minecraft/server";async function vo(){let t=Date.now(),e=0;return new Promise(n=>{let o=dn.runSchedule(()=>{Date.now()-t<1e3?e++:(dn.clearRunSchedule(o),n(e))})})}new m({name:"ping",description:"Returns the current Ticks Per Second of the servers ping"}).executes(async t=>{let e=await vo();t.reply(`\xA7aCurrent Ticks Per Second: ${e>18?"\xA7f{ \xA7aGood":e>13?"\xA7f{ \xA7eOk":"\xA7f{ \xA7cSevere"} ${e} \xA7f}`)});import{BlockLocation as ye}from"@minecraft/server";var he=new m({name:"region",description:"Create a Region",requires:t=>c(t)=="admin"});he.literal({name:"add",description:"Adds a new protection region"}).int("from_x").int("from_z").int("to_x").int("to_z").executes((t,e,n,o,r)=>{new f({x:e,z:n},{x:o,z:r},t.sender.dimension.id),t.reply(`Created Region From ${e} -64 ${n} ${o} 320 ${r}`)});he.literal({name:"remove",description:"Removes a region at the players current position"}).executes(t=>{let e=new ye(t.sender.location.x,t.sender.location.y,t.sender.location.z);f.removeRegionAtBlockLocation(e,t.sender.dimension.id)?t.reply(`Removed Region at ${e.x} ${e.y} ${e.z}`):t.reply(`Failed to find/remove region at ${e.x} ${e.y} ${e.z}`)});he.literal({name:"removeAll",description:"Removes all regions"}).executes(t=>{f.getAllRegions().forEach(e=>e.delete()),t.reply("Removed All regions")});he.literal({name:"list",description:"Lists all regions and positions"}).executes(t=>{let e=f.getAllRegions();for(let n of e)t.reply(`Region from ${n.from.x}, ${n.from.z} to ${n.to.x}, ${n.to.z} in dimension ${n.dimensionId}`);if(e.length==0)return t.reply("No regions have been made yet")});var lt=he.literal({name:"permission",description:"Handles permissions for regions"});lt.literal({name:"set",description:"Sets a certain permission on the region the player is currently in to a value"}).array("key",["doorsAndSwitches","openContainers","pvp"]).boolean("value").executes((t,e,n)=>{let o=f.blockLocationInRegion(new ye(t.sender.location.x,t.sender.location.y,t.sender.location.z),t.sender.dimension.id);if(!o)return t.reply("You are not in a region");o.changePermission(e,n),t.reply(`Changed permission ${e} to ${n}`)});lt.literal({name:"list",description:"Lists the permissions for the current region"}).executes(t=>{let e=f.blockLocationInRegion(new ye(t.sender.location.x,t.sender.location.y,t.sender.location.z),t.sender.dimension.id);if(!e)return t.reply("You are not in a region");t.reply(`Current region permissions ${JSON.stringify(e.permissions)}`)});var pn=lt.literal({name:"entities",description:"Holds the subCommands for adding or removing allowedEntities"});pn.literal({name:"add",description:"Adds a entity to the allowed entities list"}).string("entity").executes((t,e)=>{let n=f.blockLocationInRegion(new ye(t.sender.location.x,t.sender.location.y,t.sender.location.z),t.sender.dimension.id);if(!n)return t.reply("You are not in a region");let o=n.permissions.allowedEntities;o.push(e),n.changePermission("allowedEntities",o),t.reply(`Added entity ${e} to the allowed entities of the region your currently standing in`)});pn.literal({name:"remove",description:"Removes a entity from the allowed entities in the region"}).string("entity").executes((t,e)=>{let n=f.blockLocationInRegion(new ye(t.sender.location.x,t.sender.location.y,t.sender.location.z),t.sender.dimension.id);if(!n)return t.reply("You are not in a region");let o=n.permissions.allowedEntities;if(!o.includes(e))return t.reply(`The entity ${e} is not allowed to enter the region`);o=o.filter(r=>r!=e),n.changePermission("allowedEntities",o),t.reply(`Removed entity ${e} to the allowed entities of the region your currently standing in`)});var ct=(r=>(r[r.member=0]="member",r[r.admin=1]="admin",r[r.moderator=2]="moderator",r[r.builder=3]="builder",r))(ct||{});var So=t=>isNaN(Number(t))===!1;function Po(t){return Object.keys(t).filter(So).map(e=>t[e])}var mt=new m({name:"role",description:"Changes the role for a player",requires:t=>c(t)=="admin"||ue(t)});mt.literal({name:"set",description:"Sets the role for a player"}).argument(new p.playerName("playerName")).argument(new p.array("role",Po(ct))).executes((t,e,n)=>{J(e,n),t.reply(`Changed role of ${e} to ${n}`)});mt.literal({name:"get",description:"Gets the role of a player"}).argument(new p.playerName("playerName")).executes((t,e)=>{let n=c(e);t.reply(`${e} has role: ${n}`)});var ut=mt.literal({name:"owner",description:"Manages the owner"});ut.literal({name:"get",description:"Gets the owner of the world"}).executes(t=>{let e=et(),n=s.ids.collection(),o=Object.keys(n).find(r=>n[r]===e);t.reply(`\xA7aServer Owner: ${o} (id: ${e})`)});ut.literal({name:"transfer",description:"Transfers the owner of the world",requires:t=>ue(t)}).argument(new p.player).executes((t,e)=>{H(t.sender,`Are you sure you want to transfer the server ownership to ${e.name}, this action is not reversible!`,()=>{de(e),t.reply(`\xA7aSet the server Owner to: ${e.name} (id: ${e.id})`)}),t.reply("\xA7aClose chat to confirm")});ut.literal({name:"clear",description:"clear's the owner of the world",requires:t=>ue(t)}).executes(t=>{H(t.sender,"Are you sure you want to clear the server owner, this action is not reversible!",()=>{de(null),t.reply('\xA7aCleared the server owner! run "/reload" or reload world to run "/function start" again!')}),t.reply("\xA7aClose chat to confirm")});import{ActionFormData as Ao}from"@minecraft/server-ui";var B=class{constructor(e,n){this.title=e,this.body=n,this.form=new Ao,e&&this.form.title(e),n&&this.form.body(n),this.buttons=[],this.triedToShow=0}addButton(e,n=null,o){return this.buttons.push({text:e,iconPath:n,callback:o}),this.form.button(e,n),this}show(e){this.form.show(e).then(n=>{if(n.canceled){if(n.cancelationReason=="userBusy"){if(this.triedToShow>200)return e.tell("\xA7cForm Timeout: tried to show form, but you were busy (close chat after running command)");this.triedToShow++,this.show(e)}return}this.buttons[n.selection].callback?.()})}};import{ModalFormData as xo}from"@minecraft/server-ui";var _e=class{constructor(e,n,o){this.form=e,this.player=n,this.callback=o}error(e){new Z("Error",e).setButton1("Return to form",()=>{this.form.show(this.player,this.callback)}).setButton2("Cancel",null).show(this.player)}};var v=class{constructor(e){this.title=e,this.form=new xo,e&&this.form.title(e),this.args=[]}addDropdown(e,n,o){return this.args.push({type:"dropdown",options:n}),this.form.dropdown(e,n,o),this}addSlider(e,n,o,r,i){return this.args.push({type:"slider"}),this.form.slider(e,n,o,r,i),this}addToggle(e,n){return this.args.push({type:"toggle"}),this.form.toggle(e,n),this}addTextField(e,n,o){return this.args.push({type:"textField"}),this.form.textField(e,n,o),this}async show(e,n){for(let o=0;o<200;o++){let r=await this.form.show(e);if(r.cancelationReason!="userBusy"){n(new _e(this,e,n),...r.formValues.map((i,a)=>this.args[a].type=="dropdown"?this.args[a].options[i]:i));return}}return e.tell("\xA7cForm Timeout: tried to show form, but you were busy (close chat after running command)")}};function fn(t){new B("Manage Banned Items").addButton("Remove a Banned Item",null,()=>{Ro(t)}).addButton("Ban an item",null,()=>{Mo(t)}).show(t)}function Ro(t){new v("Remove Banned Items").addDropdown("Select item to remove",A("banned_items")).show(t,(e,n)=>{let o=A("banned_items");o=o.filter(r=>r!=n),G("banned_items",o),t.tell(`Removed Banned item "${n}"`)})}function Mo(t){new v("Add Banned Item").addTextField("Item Id","minecraft:string").show(t,(e,n)=>{let o=A("banned_items");if(o.includes(n))return e.error(`\xA7cItem "${n}" is already banned`);o.push(n),G("banned_items",o),t.tell(`Banned the item "${n}"`)})}function gn(t){new B("Manage Banned Blocks").addButton("Remove a Banned Block",null,()=>{No(t)}).addButton("Ban an block",null,()=>{Bo(t)}).show(t)}function No(t){new v("Remove Banned Block").addDropdown("Select block to remove",A("banned_blocks")).show(t,(e,n)=>{let o=A("banned_blocks");o=o.filter(r=>r!=n),G("banned_blocks",o),t.tell(`Removed Banned block "${n}"`)})}function Bo(t){new v("Add Banned Block").addTextField("Block Id","minecraft:barrier").show(t,(e,n)=>{let o=A("banned_blocks");if(o.includes(n))return e.error(`\xA7cBlock "${n}" is already banned`);o.push(n),G("banned_blocks",o),t.tell(`Banned the block "${n}"`)})}function yn(t){new v("Manage Enchantment Levels").addDropdown("Enchantment to change",Object.keys(Ae),0).addTextField("Level (number)","5").show(t,(e,n,o)=>{if(isNaN(o))return e.error(`\xA7c"${o}" is not a number, please enter a value like, "3", "9", etc.`);let r=parseInt(o),i=A("enchantments");i[n]=r,G("enchantments",i),t.tell(`Set max level for ${n} to ${r}`)})}function hn(t){new v("Manage Appeal Link").addTextField("Appeal Link",Pe).show(t,(e,n)=>{G("appealLink",n),t.tell(`Changed the servers appeal link to ${n}`)})}function bn(t){let e=new B("Manage Protections");for(let n of Object.values(pe))e.addButton(n.name,n.iconPath,()=>{Do(n,t)});e.addButton("Back","textures/ui/arrow_dark_left_stretch.png",()=>{$e(t)}).show(t)}function Do(t,e){let n=t.getConfig(),o=new v(`Manage ${t.name} Protection Config`).addToggle("Enabled",n.enabled),r=[];for(let[i,a]of Object.entries(t.configDefault))r.push(i),typeof a.defaultValue=="boolean"?o.addToggle(a.description,n[i]):typeof a.defaultValue=="number"?o.addSlider(a.description,0,100,1,n[i]):o.addTextField(a.description,null,n[i]);o.show(e,(i,a,...l)=>{a!=n.enabled&&(a&&t.enable(),a||t.disable());let d={enabled:a};for(let[g,b]of Object.keys(t.configDefault).entries())d[b]=l[g];t.setConfig(d),e.tell(`Updated config for ${t.name}!`)})}function $e(t){new B("Rubedo Settings").addButton("Auto Mod","textures/ui/permissions_op_crown.png",()=>{bn(t)}).addButton("Banned items","textures/blocks/sculk_shrieker_top.png",()=>{fn(t)}).addButton("Banned blocks","textures/blocks/barrier.png",()=>{gn(t)}).addButton("Enchantments","textures/items/book_enchanted.png",()=>{yn(t)}).addButton("Appeal Link","textures/ui/Feedback.png",()=>{hn(t)}).show(t)}new m({name:"settings",description:"Opens up the settings menu for the player",requires:t=>["admin","moderator"].includes(c(t))}).executes(t=>{$e(t.sender),t.sender.tell("\xA7aForm request sent, close chat to continue!")});import{world as kn}from"@minecraft/server";function In(t,e){if(t.hasTag("spectator")){if(t.runCommandAsync("gamemode c"),t.triggerEvent("removeSpectator"),t.removeTag("spectator"),!e)return;kn.say({rawtext:[{translate:"multiplayer.player.joined",with:[`\xA7e${t.name}`]}]})}else{if(t.runCommandAsync("gamemode spectator"),t.triggerEvent("addSpectator"),t.addTag("spectator"),!e)return;kn.say({rawtext:[{translate:"multiplayer.player.left",with:[`\xA7e${t.name}`]}]})}}new m({name:"vanish",description:"Toggles Vanish Mode on the sender",requires:t=>c(t)=="admin"}).executes(t=>{In(t.sender,!1)}).boolean("say").executes((t,e)=>{In(t.sender,e)});var wn="2.7.0-beta";new m({name:"version",description:"Get Current Rubedo Version",aliases:["v"]}).executes(t=>{t.reply(`Current Rubedo Version: ${wn}`)});new m({name:"kick",description:"Kicks a player from the game",requires:t=>c(t)=="admin"}).argument(new p.player).string("reason").executes((t,e,n)=>{_(e,[n]),t.reply(`\xA7aKicked ${e.name} from world`)});var ee=class{constructor(e){this.data=e,console.warn(`[LOG]: ${e.message}`),s.logs.set(Date.now().toString(),e)}};function dt(t){var e=6e4,n=e*60,o=n*24,r=o*30,i=o*365,a=Date.now()-t;return a<e?Math.round(a/1e3)+" seconds ago":a<n?Math.round(a/e)+" minutes ago":a<o?Math.round(a/n)+" hours ago":a<r?"approximately "+Math.round(a/o)+" days ago":a<i?"approximately "+Math.round(a/r)+" months ago":"approximately "+Math.round(a/i)+" years ago"}var be=new m({name:"log",description:"Manages the log command",requires:t=>c(t)=="admin"});be.literal({name:"add",description:"Adds a new log"}).string("message").executes((t,e)=>{new ee({message:e}),t.reply(`\xA7aAdded new log: ${e}`)});be.literal({name:"getAll",description:"Gets all logs sorted in descending"}).int("page").array("order",["ascending","descending"]).executes((t,e,n)=>{let o=Object.entries(s.logs.collection()).sort((i,a)=>n=="ascending"?parseInt(a[0])-parseInt(i[0]):parseInt(i[0])-parseInt(a[0]));if(o.length==0)return t.reply("\xA7cNo Logs have been made!");let r=Math.ceil(o.length/8);e>r&&(e=r),t.reply(`\xA72--- Showing logs page ${e} of ${r} (${I}log getAll <page: int>) ---`);for(let[i,a]of o.slice(e*8-8,e*8))t.reply(`${dt(parseInt(i))}: ${a.message}`)});be.literal({name:"getPlayersLogs",description:"Gets all logs associated with a player"}).argument(new p.playerName).int("page").array("order",["ascending","descending"]).executes((t,e,n,o)=>{let r=Object.entries(s.logs.collection()).filter(a=>a[1].playerName==e).sort((a,l)=>o=="ascending"?parseInt(l[0])-parseInt(a[0]):parseInt(a[0])-parseInt(l[0]));if(r.length==0)return t.reply(`\xA7cNo Logs exists for "${e}"!`);let i=Math.ceil(r.length/8);n>i&&(n=i),t.reply(`\xA72--- Showing logs for "${e}" page ${n} of ${i} ---`);for(let[a,l]of r.slice(n*8-8,n*8))t.reply(`${dt(parseInt(a))}: ${l.message}`)});be.literal({name:"getProtectionLogs",description:"Gets all logs associated with a protection"}).string("protection").int("page").array("order",["ascending","descending"]).executes((t,e,n,o)=>{let r=Object.entries(s.logs.collection()).filter(a=>a[1].protection==e).sort((a,l)=>o=="ascending"?parseInt(l[0])-parseInt(a[0]):parseInt(a[0])-parseInt(l[0]));if(r.length==0)return t.reply(`\xA7cNo Logs exists for protection: "${e}"!`);let i=Math.ceil(r.length/8);n>i&&(n=i),t.reply(`\xA72--- Showing logs for Protection: "${e}" page ${n} of ${i} ---`);for(let[a,l]of r.slice(n*8-8,n*8))t.reply(`${dt(parseInt(a))}: ${l.message}`)});be.literal({name:"clearAll",description:"Clears all logs"}).executes(t=>{s.logs.clear(),t.reply("\xA7aCleared All logs!")});var _o=new m({name:"teleport",description:"Teleports entities (players, mobs, etc.).",aliases:["tp"],requires:t=>c(t)=="admin"});_o.argument(new p.player).location("destination").executes((t,e,n)=>{e.addTag("skip-movement-check"),e.teleport(n,e.dimension,0,0),t.reply(`Teleported ${e.name} to ${n.x} ${n.y} ${n.z}`)});import{system as pt,world as $o}from"@minecraft/server";var Fe={};C.subscribe(()=>{pt.runSchedule(()=>{let t=[...$o.getPlayers()];for(let[e,n]of t.entries())for(let o of Object.values(Fe))o.delay!=0&&pt.currentTick-o.lastCall<o.delay||(o.callback(n),e==t.length-1&&(o.lastCall=pt.currentTick))})});var S=class{static subscribe(e,n=0){let o=Object.keys(Fe).length;return Fe[o]={callback:e,delay:n,lastCall:0},o}static unsubscribe(e){delete Fe[e]}};s.bans.onLoad(()=>{S.subscribe(t=>{try{let e=s.bans.get(t.id);if(!e)return;if(e.expire&&e.expire<Date.now())return s.bans.delete(t.id);_(t,["\xA7cYou have been banned!",`\xA7aReason: \xA7f${e.reason}`,`\xA7fExpiry: \xA7b${e.expire?W(e.expire-Date.now()):"Forever"}`,`\xA7fAppeal at: \xA7b${A("appealLink")}`],()=>{console.warn(new Error("Failed to kick player")),s.bans.delete(t.id)})}catch(e){console.warn(e+e.stack)}},100)});import{Location as Fo}from"@minecraft/server";S.subscribe(t=>{try{let e=s.freezes.get(t.id);if(!e)return t.getComponent("movement").resetToDefaultValue();t.getComponent("movement").setCurrent(0),t.teleport(new Fo(e.location.x,e.location.y,e.location.z),y[e.location.dimension],0,0)}catch{}},200);import{world as zo}from"@minecraft/server";var ft={};zo.events.beforeChat.subscribe(t=>{if(!t.message.startsWith(I))for(let e of Object.values(ft))e.callback(t)});var ze=class{static subscribe(e){let n=Date.now();return ft[n]={callback:e},n}static unsubscribe(e){delete ft[e]}};ze.subscribe(t=>{let e=x.getMuteData(t.sender);if(!!e){if(e.expire&&e.expire<Date.now())return s.mutes.delete(t.sender.name);t.cancel=!0,t.sender.tell(w["modules.managers.mute.isMuted"]())}});import{BlockLocation as Vo,system as Cn,world as gt}from"@minecraft/server";Cn.runSchedule(()=>{Se()},6e3);gt.events.beforeItemUseOn.subscribe(t=>{if(["moderator","admin"].includes(c(t.source)))return;let e=f.blockLocationInRegion(t.blockLocation,t.source.dimension.id);if(!e)return;let n=t.source.dimension.getBlock(t.blockLocation);Wt.includes(n.typeId)&&e.permissions.doorsAndSwitches||Qt.includes(n.typeId)&&e.permissions.openContainers||(t.cancel=!0)});gt.events.beforeExplosion.subscribe(t=>{for(let e=0;e<t.impactedBlocks.length;e++){let n=t.impactedBlocks[e];if(f.blockLocationInRegion(n,t.dimension.id))return t.cancel=!0}});gt.events.entitySpawn.subscribe(async({entity:t})=>{let e=await f.blockLocationInRegionSync(new Vo(t.location.x,t.location.y,t.location.z),t.dimension.id);!e||e.permissions.allowedEntities.includes(t.typeId)||(t.teleport({x:0,y:-64,z:0},t.dimension,0,0),t.kill())});C.subscribe(()=>{Cn.runSchedule(async()=>{for(let t of await f.getAllRegionsSync())for(let e of y[t.dimensionId].getEntities({excludeTypes:t.permissions.allowedEntities}))!t.entityInRegion(e)||(e.teleport({x:0,y:-64,z:0},e.dimension,0,0),e.kill())},100)});s.regions.onLoad(()=>{S.subscribe(t=>{for(let e of f.getAllRegions())e.entityInRegion(t)?(t.addTag("inRegion"),e.permissions.pvp||t.addTag("region-protected")):(t.removeTag("inRegion"),t.removeTag("region-protected"))},5)});import{world as jo}from"@minecraft/server";jo.events.playerSpawn.subscribe(({player:t})=>{s.ids.onLoad(()=>{if(xe()&&c(t)!="admin")return _(t,w["lockdown.kick.message"]());x.getMuteData(t)&&t.runCommandAsync("ability @s mute true"),s.ids.has(t.name)||s.ids.set(t.name,t.id);let e=N.getPlayersRoleToSet(t.name);e&&J(t,e)})});import{Items as Yo,MinecraftItemTypes as ke,world as En}from"@minecraft/server";var Tn=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44];function Go(t,e,n){let o=t.getComponent("minecraft:inventory").container;for(let r=0;r<o.size;r++){let i=e.slots[r];if(!i||!i.item){o.setItem(r,M);continue}o.setItem(r,i.item.itemStack)}for(let[r,i]of[...En.getPlayers()].entries()){let a=Tn[r],l=new E(ke.skull,{nameTag:i.name,data:3});o.setItem(a,l.itemStack),e.slots[a]={item:l,action:d=>{d.PageAction("moderation:see_inventory",{name:i.name})}}}}function Ko(t,e,n){let o=t.getComponent("minecraft:inventory").container;for(let l=0;l<o.size;l++){let d=e.slots[l];if(!d||!d.item){o.setItem(l,M);continue}o.setItem(l,d.item.itemStack)}let r=[...En.getPlayers()].find(l=>l.name==n.name);r||(Object.values(P).find(d=>d.entity.id==t.id).despawn(),r.tell(`"${n.name}" Could not be found, Gui Crashed`));let i=r.getComponent("inventory").container,a=0;for(let l=0;l<i.size;l++){let d=i.getItem(l),g=Tn[a];if(a++,!d){o.setItem(g,M);continue}o.setItem(g,d),e.slots[g]={item:new E(Yo.get(d.typeId),{amount:d.amount,data:d.data},d),action:b=>{l<9?r.runCommandAsync(`replaceitem entity @s slot.hotbar ${l} air`):r.runCommandAsync(`replaceitem entity @s slot.inventory ${l-9} air`),b.GiveAction(),e.slots[g]={item:null,action:Wn=>{i.addItem(Wn.getItemAdded())}}}}}}new V("moderation:see",Go).setSlots([50],new E(ke.arrow,{nameTag:"\xA7fBack"}),t=>{t.PageAction("home")}).setSlots([48],new E(ke.barrier,{nameTag:"\xA7cClose GUI"}),t=>{t.CloseAction()});new V("moderation:see_inventory",Ko).setSlots([50],new E(ke.arrow,{nameTag:"\xA7fBack"}),t=>{t.PageAction("moderation:see")}).setSlots([48],new E(ke.barrier,{nameTag:"\xA7cClose GUI"}),t=>{t.CloseAction()});import{GameMode as Uo,world as qo}from"@minecraft/server";import{system as vn,world as Sn}from"@minecraft/server";var R=class{constructor(e,n,o,r){this.name=e;this.description=n;this.iconPath=o;this.isEnabledByDefault=r;this.name=e,this.description=n,this.iconPath=o,this.configDefault={},this.isEnabled=!1,this.isEnabledByDefault=r,this.events={},this.schedules=[],this.forEachPlayers=[],pe[this.name]=this}setConfigDefault(e){return this.configDefault=e,s.protections.hasSync(this.name).then(n=>{if(n)return;let o={enabled:!0};for(let r of Object.keys(e))o[r]=e[r].defaultValue;s.protections.set(this.name,o)}),this}getConfig(){let e=s.protections.get(this.name);return e||(e={enabled:this.isEnabled}),e}async setConfig(e){return s.protections.set(this.name,e)}triggerChange(e){if(e){this.isEnabled=!0,this.onEnableCallback?.();for(let[n,o]of Object.entries(this.events)){if(o.triggered)continue;let r=Sn.events[n].subscribe(o.callback);o.triggered=!0,o.callback=r}for(let n of this.forEachPlayers){if(n.key)continue;let o=S.subscribe(n.callback,n.delay);n.key=o}for(let n of this.schedules){if(n.runScheduleId)continue;let o=vn.runSchedule(n.callback);n.runScheduleId=o}}else{this.isEnabled=!1,this.onDisableCallback?.();for(let[n,o]of Object.entries(this.events))!o.triggered||(Sn.events[n].unsubscribe(o.callback),o.triggered=!1);for(let n of this.forEachPlayers)!n.key||(S.unsubscribe(n.key),n.key=null);for(let n of this.schedules)!n.runScheduleId||(vn.clearRunSchedule(n.runScheduleId),n.runScheduleId=null)}}onEnable(e){return this.onEnableCallback=e,this}onDisable(e){return this.onDisableCallback=e,this}subscribe(e,n){return this.events[e]={callback:n,triggered:!1},this}runSchedule(e,n){return this.schedules.push({callback:e,tickInterval:n,runScheduleId:null}),this}forEachPlayer(e,n=0){return this.forEachPlayers.push({callback:e,delay:n,key:null}),this}enable(){this.triggerChange(!0)}disable(){this.triggerChange(!1)}};import{world as Ho}from"@minecraft/server";var k=class{constructor(){this.data=new Map,this.events={playerLeave:Ho.events.playerLeave.subscribe(e=>this.data.delete(e.playerName))}}set(e,n){this.data.set(e.name,n)}get(e){return this.data.get(e.name)}has(e){return this.data.has(e.name)}delete(e){this.data.delete(e.name)}clear(){this.data.clear()}playerNames(){return[...this.data.keys()]}includes(e){return this.playerNames().includes(e.name)}};var Wo=Uo.creative,Pn=new k,An=new R("gamemode","Blocks illegal gamemode","textures/ui/creative_icon.png",!0).setConfigDefault({clearPlayer:{description:"Whether to clear players inventory.",defaultValue:!0},setToSurvival:{description:"If player should be set to survival after being flagged.",defaultValue:!0},banPlayer:{description:"If player should be banned after violation count is met.",defaultValue:!1},violationCount:{description:"The amount of violations before ban.",defaultValue:0}});An.runSchedule(()=>{let t=An.getConfig();for(let e of qo.getPlayers({gameMode:Wo})){if(["moderator","admin","builder"].includes(c(e)))continue;try{t.setToSurvival&&e.runCommandAsync("gamemode s"),t.clearPlayer&&e.runCommandAsync("clear @s")}catch{}new ee({playerName:e.name,protection:"Gamemode",message:`${e.name} has entered into a illegal gamemode!`});let n=(Pn.get(e)??0)+1;Pn.set(e,n),t.banPlayer&&n>=t.violationCount&&new $(e,null,"Illegal Gamemode")}},20);import{MinecraftBlockTypes as rr,MinecraftEffectTypes as ir,MinecraftItemTypes as Et,Player as Ve,system as Tt}from"@minecraft/server";import{system as xn,world as Qo}from"@minecraft/server";var yt={};function Xo(t,e){return!(t.x!=e.x||t.y!=e.y||t.z!=e.z)}var ht=new k;xn.runSchedule(()=>{let t=(e,n)=>{for(let o of Object.values(yt))o.callback(e,n)};for(let e of Qo.getPlayers()){let n=ht.get(e);n&&Xo(e.location,n.location)||(ht.set(e,{location:e.location,dimension:e.dimension,currentTick:xn.currentTick}),n&&t(e,n))}});var L=class{static subscribe(e){let n=Date.now();return yt[n]={callback:e},n}static unsubscribe(e){delete yt[e]}static delete(e){ht.delete(e)}};var Rn={walk:{velocity:.17,distance:.23},run:{velocity:.19,distance:.35}},Mn=.056,Nn=10,Bn=["gliding","riding"],Ln=32767.001953125,Dn=60;import{world as Jo,Location as Zo,system as er}from"@minecraft/server";var bt={};Jo.events.blockBreak.subscribe(t=>{for(let e of Object.values(bt))e.callback(new kt(t.block,t.brokenBlockPermutation,t.dimension,t.player))});var Ie=class{static subscribe(e){let n=Date.now();return bt[n]={callback:e},n}static unsubscribe(e){delete bt[e]}},kt=class{constructor(e,n,o,r){this.block=e;this.brokenBlockPermutation=n;this.dimension=o;this.player=r;this.block=e,this.brokenBlockPermutation=n,this.dimension=o,this.player=r}set cancel(e){if(this.dimension.getBlock(this.block.location).setPermutation(this.brokenBlockPermutation.clone()),Re.includes(this.brokenBlockPermutation.type.id)){let n=Ne[JSON.stringify(this.block.location)];n&&n.load(this.block.getComponent("inventory").container)}er.run(()=>{[...this.dimension.getEntities({maxDistance:2,type:"minecraft:item",location:new Zo(this.block.location.x,this.block.location.y,this.block.location.z)})].forEach(n=>n.kill())})}};var On=new k,tr=15,It=["snow","lush_plants_replaceable","azalea_log_replaceable","minecraft:crop","fertilize_area","plant"],nr=["minecraft:water","minecraft:flowing_water","minecraft:lava","minecraft:flowing_lava","minecraft:bedrock"],_n=new k,$n=null,Fn=new R("nuker","Blocks block breaking too fast","textures/blocks/dirt.png",!0).setConfigDefault({banPlayer:{description:"If the player should be banned once violation count is met",defaultValue:!1},violationCount:{description:"Violations before ban",defaultValue:0}});Fn.onEnable(()=>{let t=Fn.getConfig();$n=Ie.subscribe(e=>{if(["moderator","admin"].includes(c(e.player))||e.block.getTags().some(o=>It.includes(o)))return;let n=On.get(e.player);if(On.set(e.player,Date.now()),!!n){if(!nr.includes(e.block.typeId)){if(n<Date.now()-tr)return;let o=(_n.get(e.player)??0)+1;_n.set(e.player,o),t.banPlayer&&o>=t.violationCount&&new $(e.player,null,"Using Nuker")}e.cancel=!0}})}).onDisable(()=>{Ie.unsubscribe($n)});var zn=new k,Ct=new k;function sr(t,e){return Math.hypot(e.x-t.x,e.z-t.z)}function ar(t){return(t.getEffect(ir.speed)?.amplifier??0)*Mn}function lr(t,e,n){let o=ar(n),r=Tt.currentTick-e,i=Rn.run.distance+.6;return t/r>o+i}function wt(t,e){let n=(zn.get(t)??0)+1;zn.set(t,n),L.delete(t),!(n<3)&&t.teleport(e.location,e.dimension,t.rotation.x,t.rotation.y)}function cr(t){let e=t.dimension.getBlock(we(t.location));if(!e.getTags().some(n=>It.includes(n))&&!e.type.id.endsWith("grass")&&!e.type.id.endsWith("water")&&!e.type.id.endsWith("lava")&&!e.type.id.endsWith("portal")&&!e.type.id.endsWith("gateway")&&e.typeId!=rr.air.id&&!e.type.canBeWaterlogged)return!0}var Vn=null,te=new R("movement","Blocks illegal movements on players","textures/ui/move.png",!1).setConfigDefault({tpCheck:{description:"If teleports should be flagged",defaultValue:!0}});te.onEnable(()=>{let t=te.getConfig();Vn=L.subscribe((e,n)=>{if(c(e)=="admin"||e.dimension.id!=n.dimension.id||e.getTags().some(r=>Bn.includes(r)))return;let o=sr(e.location,n.location);if(e.hasTag("skip-movement-check"))return e.removeTag("skip-movement-check");if(n.location.y!=Ln&&!Ct.has(e)){if(cr(e))return wt(e,n);if(o>Nn){if(!t.tpCheck)return;wt(e,n)}else{if(!lr(o,n.currentTick,e))return;wt(e,n)}}})}).onDisable(()=>{L.unsubscribe(Vn)});te.subscribe("dataDrivenEntityTriggerEvent",t=>{if(!(t.entity instanceof Ve)||t.id!="on_death")return;let e=t.entity;Tt.run(()=>{L.delete(e)})});te.subscribe("projectileHit",({projectile:t,source:e})=>{t.typeId==Et.enderPearl.id&&e instanceof Ve&&L.delete(e)});te.subscribe("itemCompleteCharge",({itemStack:t,source:e})=>{t.typeId==Et.chorusFruit.id&&e instanceof Ve&&L.delete(e)});te.subscribe("itemReleaseCharge",({itemStack:t,source:e})=>{t.typeId==Et.trident.id&&e instanceof Ve&&(Ct.set(e,!0),Tt.runSchedule(()=>{Ct.delete(e)},Dn))});var jn=new k,Yn=new k,Gn=new R("spam","Blocks spam in chat","textures/ui/mute_on.png",!1).setConfigDefault({permMutePlayer:{description:"If player should be permanently muted once violation count is met.",defaultValue:!1},violationCount:{description:"Violation count before permanent mute",defaultValue:0},repeatedMessages:{description:"Blocks repeated messages",defaultValue:!0},zalgo:{description:"Blocks zalgo",defaultValue:!0}});Gn.subscribe("beforeChat",t=>{try{if(t.message.startsWith(I)||["admin","moderator"].includes(c(t.sender)))return;let e=Gn.getConfig(),n=()=>{let o=(Yn.get(t.sender)??0)+1;Yn.set(t.sender,o),e.permMutePlayer&&o>=e.violationCount&&new x(t.sender,null,"Spamming")};if(e.repeatedMessages&&jn.get(t.sender)==t.message)return t.cancel=!0,n(),t.sender.tell("\xA7cRepeated message detected!");if(e.zalgo&&/%CC%/g.test(encodeURIComponent(t.message)))return t.cancel=!0,n(),t.sender.tell("\xA7cYou message contains some type of zalgo and cannot be sent!");jn.set(t.sender,t.message)}catch(e){console.warn(e+e.stack)}});import{MinecraftEffectTypes as mr,Player as ur,world as Kn}from"@minecraft/server";var dr=Kn.events.beforeDataDrivenEntityTriggerEvent.subscribe(t=>{if(!(t.entity instanceof ur)||t.id!="rubedo:becomeAdmin")return;t.entity.removeTag("CHECK_PACK");let e=tn();if(e)return t.entity.playSound("note.bass"),t.entity.tell(`\xA7cFailed to give server owner: "${e}" is already owner!`),Kn.events.beforeDataDrivenEntityTriggerEvent.unsubscribe(dr);J(t.entity,"admin"),de(t.entity),t.entity.addEffect(mr.blindness,3,255,!0),t.entity.tell('\xA7aYou have now been set as the "owner" of this server. The command "/function start" will not do anything anymore, type "-help" for more information!')});import{DynamicPropertiesDefinition as Un,MinecraftEntityTypes as pr,world as qn}from"@minecraft/server";var Hn=[];qn.events.worldInitialize.subscribe(({propertyRegistry:t})=>{let e=new Un;e.defineString("role",30),t.registerEntityTypeDynamicProperties(e,pr.player);let n=new Un;n.defineString("worldsOwner",100),n.defineBoolean("isLockDown"),t.registerWorldDynamicProperties(n);for(let o of Hn)qn.scoreboard.addObjective(o.objective,o.displayName??"")});var Oe=[];function un(){Oe=[]}console.warn("----- Importing Plugins -----");fr.events.beforeWatchdogTerminate.subscribe(t=>{t.cancel=!0,console.warn(`WATCHDOG TRIED TO CRASH = ${t.terminateReason}`)});
-//# sourceMappingURL=index.js.map
+// src/index.ts
+import { system as system7 } from "@minecraft/server";
+
+// src/lib/DynamicPropertyWrapper/DynamicProperty.ts
+import { world } from "@minecraft/server";
+var DynamicProperty = class {
+  constructor(id, rootType) {
+    this.identifier = id;
+    this.rootType = rootType;
+    this.entityTypes = [];
+  }
+  compile(value) {
+    if (typeof value == "number")
+      return value;
+    if (typeof value == "boolean")
+      return value;
+    if (typeof value == "string")
+      return value;
+    if (this.rootType == "vector")
+      return value;
+    return JSON.stringify(value);
+  }
+  unCompile(value) {
+    if (value == void 0)
+      return void 0;
+    if (["boolean", "number", "string", "vector"].includes(this.rootType))
+      return value;
+    return JSON.parse(value);
+  }
+  registerEntityTypes(entityTypes) {
+    this.entityTypes = this.entityTypes.concat(entityTypes);
+    return this;
+  }
+  setWorldDynamic(value = true) {
+    this.isWorldDynamic = value;
+    return this;
+  }
+  get(entity) {
+    try {
+      if (entity)
+        return this.unCompile(entity.getDynamicProperty(this.identifier));
+      if (!this.isWorldDynamic)
+        throw new Error(`${this.identifier} Is not World Dynamic!`);
+      return this.unCompile(world.getDynamicProperty(this.identifier));
+    } catch (error) {
+      return void 0;
+    }
+  }
+  set(value, entity) {
+    let parsedValue = this.compile(value);
+    if (entity) {
+      const typeId = entity.typeId;
+      if (!this.entityTypes.find((t) => t.id == typeId))
+        throw new Error(
+          `${entity.id} Is not a registered entity type for ${this.identifier}!`
+        );
+      entity.setDynamicProperty(this.identifier, parsedValue);
+    } else {
+      if (!this.isWorldDynamic)
+        throw new Error(`${this.identifier} Is not World Dynamic!`);
+      world.setDynamicProperty(this.identifier, parsedValue);
+    }
+  }
+  remove(entity) {
+    if (entity) {
+      const typeId = entity.typeId;
+      if (!this.entityTypes.find((t) => t.id == typeId))
+        throw new Error(
+          `${entity.id} Is not a registered entity type for ${this.identifier}!`
+        );
+      return entity.setDynamicProperty(this.identifier, void 0);
+    } else {
+      if (!this.isWorldDynamic)
+        throw new Error(`${this.identifier} Is not World Dynamic!`);
+      return world.setDynamicProperty(this.identifier, void 0);
+    }
+  }
+};
+
+// src/lib/Command/index.ts
+import { system, world as world5 } from "@minecraft/server";
+
+// src/config/commands.ts
+var PREFIX = "-";
+
+// src/lib/Command/ArgumentTypes.ts
+import { world as world3 } from "@minecraft/server";
+
+// src/database/Database.ts
+import { world as world2 } from "@minecraft/server";
+var Database = class {
+  constructor(tableName) {
+    this.tableName = tableName;
+    this.tableName = tableName;
+    this.MEMORY = null;
+    this.QUEUE = [];
+    let data = world2.getDynamicProperty(`db_${this.tableName}`) ?? "{}";
+    if (typeof data != "string")
+      throw "Database Set with Unknown Value!";
+    const LOADED_DATA = JSON.parse(data);
+    this.MEMORY = LOADED_DATA;
+    this.onLoadCallback?.(LOADED_DATA);
+    this.QUEUE.forEach((v) => v());
+  }
+  async addQueueTask() {
+    return new Promise((resolve) => {
+      this.QUEUE.push(resolve);
+    });
+  }
+  async saveData() {
+    if (!this.MEMORY)
+      await this.addQueueTask();
+    world2.setDynamicProperty(
+      `db_${this.tableName}`,
+      JSON.stringify(this.MEMORY)
+    );
+  }
+  async onLoad(callback) {
+    if (this.MEMORY)
+      return callback(this.MEMORY);
+    this.onLoadCallback = callback;
+  }
+  async set(key, value) {
+    if (!this.MEMORY)
+      throw new Error("Data tried to be set before load!");
+    this.MEMORY[key] = value;
+    return this.saveData();
+  }
+  get(key) {
+    if (!this.MEMORY)
+      throw new Error(
+        "Entities not loaded! Consider using `getAsync` instead!"
+      );
+    return this.MEMORY[key];
+  }
+  async getSync(key) {
+    if (this.MEMORY)
+      return this.get(key);
+    await this.addQueueTask();
+    if (!this.MEMORY)
+      return null;
+    return this.MEMORY[key];
+  }
+  keys() {
+    if (!this.MEMORY)
+      throw new Error(
+        "Entities not loaded! Consider using `keysSync` instead!"
+      );
+    return Object.keys(this.MEMORY);
+  }
+  async keysSync() {
+    if (this.MEMORY)
+      return this.keys();
+    await this.addQueueTask();
+    if (!this.MEMORY)
+      return [];
+    return Object.keys(this.MEMORY);
+  }
+  values() {
+    if (!this.MEMORY)
+      throw new Error(
+        "Entities not loaded! Consider using `valuesSync` instead!"
+      );
+    return Object.values(this.MEMORY);
+  }
+  async valuesSync() {
+    if (this.MEMORY)
+      return this.values();
+    await this.addQueueTask();
+    if (!this.MEMORY)
+      return [];
+    return Object.values(this.MEMORY);
+  }
+  has(key) {
+    if (!this.MEMORY)
+      throw new Error("Entities not loaded! Consider using `hasSync` instead!");
+    return Boolean(this.MEMORY[key]);
+  }
+  async hasSync(key) {
+    if (this.MEMORY)
+      return this.has(key);
+    await this.addQueueTask();
+    if (!this.MEMORY)
+      return false;
+    return Boolean(this.MEMORY[key]);
+  }
+  collection() {
+    if (!this.MEMORY)
+      throw new Error(
+        "Entities not loaded! Consider using `collectionSync` instead!"
+      );
+    return this.MEMORY;
+  }
+  async collectionSync() {
+    if (this.MEMORY)
+      return this.collection();
+    await this.addQueueTask();
+    if (!this.MEMORY)
+      return {};
+    return this.MEMORY;
+  }
+  async delete(key) {
+    if (!this.MEMORY)
+      return false;
+    const status = delete this.MEMORY[key];
+    await this.saveData();
+    return status;
+  }
+  async clear() {
+    this.MEMORY = {};
+    return await this.saveData();
+  }
+  getKeyByValue(value) {
+    for (const key in this.MEMORY) {
+      if (this.MEMORY[key] === value) {
+        return key;
+      }
+    }
+    return null;
+  }
+};
+
+// src/tables.ts
+var TABLES = {
+  config: new Database("config"),
+  freezes: new Database("freezes"),
+  mutes: new Database("mutes"),
+  bans: new Database("bans"),
+  regions: new Database("regions"),
+  roles: new Database("roles"),
+  tasks: new Database("tasks"),
+  npcs: new Database("npcs"),
+  ids: new Database("ids"),
+  logs: new Database("logs"),
+  protections: new Database("protections")
+};
+
+// src/lib/Command/ArgumentTypes.ts
+function fetch(playerName) {
+  return [...world3.getPlayers()].find((player) => player.name === playerName);
+}
+var LiteralArgumentType = class {
+  constructor(name = "literal") {
+    this.name = name;
+    this.typeName = "literal";
+    this.name = name;
+  }
+  matches(value) {
+    return {
+      success: this.name == value
+    };
+  }
+  fail(value) {
+    return `${value} should be ${this.name}!`;
+  }
+};
+var StringArgumentType = class {
+  constructor(name = "string") {
+    this.name = name;
+    this.typeName = "string";
+    this.name = name;
+  }
+  matches(value) {
+    return {
+      success: Boolean(value && value != ""),
+      value
+    };
+  }
+  fail(_value) {
+    return `Value must be of type string!`;
+  }
+};
+var IntegerArgumentType = class {
+  constructor(name = "integer", range) {
+    this.name = name;
+    this.typeName = "int";
+    this.name = name;
+    this.range = range;
+  }
+  static isNumberInRange(numberToCheck, range) {
+    return numberToCheck >= range[0] && numberToCheck <= range[1];
+  }
+  matches(value) {
+    return {
+      success: this.range ? IntegerArgumentType.isNumberInRange(parseInt(value), this.range) : !isNaN(Number(value)),
+      value: parseInt(value)
+    };
+  }
+  fail(_value) {
+    return `Value must be valid number!`;
+  }
+};
+var FloatArgumentType = class {
+  constructor(name = "float") {
+    this.name = name;
+    this.typeName = "float";
+    this.name = name;
+  }
+  matches(value) {
+    return {
+      success: Boolean(value?.match(/^\d+\.\d+$/)?.[0]),
+      value: parseInt(value)
+    };
+  }
+  fail(_value) {
+    return `Value must be valid float!`;
+  }
+};
+var LocationArgumentType = class {
+  constructor(name = "location") {
+    this.name = name;
+    this.typeName = "location";
+    this.name = name;
+  }
+  matches(value) {
+    return {
+      success: /^([~^]{0,1}(-\d)?(\d*)?(\.(\d+))?)$/.test(value),
+      value
+    };
+  }
+  fail(_value) {
+    return `Value needs to be a valid number, value can include: [~,^]`;
+  }
+};
+var BooleanArgumentType = class {
+  constructor(name = "boolean") {
+    this.name = name;
+    this.typeName = "boolean";
+    this.name = name;
+  }
+  matches(value) {
+    return {
+      success: Boolean(value?.match(/^(true|false)$/)?.[0]),
+      value: value == "true" ? true : false
+    };
+  }
+  fail(value) {
+    return `"${value}" can be either "true" or "false"`;
+  }
+};
+var PlayerArgumentType = class {
+  constructor(name = "player") {
+    this.name = name;
+    this.typeName = "Player";
+    this.name = name;
+  }
+  matches(value) {
+    return {
+      success: fetch(value) ? true : false,
+      value: fetch(value)
+    };
+  }
+  fail(value) {
+    return `player: "${value}", is not in this world`;
+  }
+};
+var TargetArgumentType = class {
+  constructor(name = "target") {
+    this.name = name;
+    this.typeName = "Target";
+    this.name = name;
+  }
+  matches(value) {
+    return {
+      success: Boolean(value?.match(/^(@.|"[\s\S]+")$/)?.[0]),
+      value
+    };
+  }
+  fail(value) {
+    return `${value} is not a valid target`;
+  }
+};
+var ArrayArgumentType = class {
+  constructor(name = "array", types) {
+    this.name = name;
+    this.types = types;
+    this.typeName = "string";
+    this.name = name;
+    this.types = types;
+    this.typeName = types.join(" | ").replace(/(.{25})..+/, "$1...");
+  }
+  matches(value) {
+    return {
+      success: this.types.includes(value),
+      value
+    };
+  }
+  fail(value) {
+    return `"${value}" must be one of these values: ${this.types.join(" | ")}`;
+  }
+};
+var DurationArgumentType = class {
+  constructor(name) {
+    this.name = name;
+    this.typeName = "Duration";
+  }
+  matches(value) {
+    return {
+      success: /^(\d+[hdysmw],?)+$/.test(value),
+      value
+    };
+  }
+  fail(value) {
+    return `"${value}" must be a value like "10d" or "3s" the first part is the length second is unit`;
+  }
+};
+var PlayerNameArgumentType = class {
+  constructor(name = "playerName") {
+    this.name = name;
+    this.typeName = "playerName";
+    this.name = name;
+  }
+  matches(value) {
+    const player = TABLES.ids.get(value);
+    return {
+      success: player ? true : false,
+      value
+    };
+  }
+  fail(value) {
+    return `player: "${value}" has never played this world before! Tip: if the name has spaces in it use quotes around name!`;
+  }
+};
+var ArgumentTypes = {
+  string: StringArgumentType,
+  int: IntegerArgumentType,
+  float: FloatArgumentType,
+  location: LocationArgumentType,
+  boolean: BooleanArgumentType,
+  player: PlayerArgumentType,
+  target: TargetArgumentType,
+  array: ArrayArgumentType,
+  duration: DurationArgumentType,
+  playerName: PlayerNameArgumentType
+};
+
+// src/lib/Command/Callback.ts
+var CommandCallback = class {
+  constructor(data) {
+    this.data = data;
+    this.data = data;
+    this.sender = data.sender;
+  }
+};
+
+// src/lib/Command/utils.ts
+function getChatAugments(message, prefix) {
+  const match = message.slice(prefix.length).trim().match(/"[^"]+"|[^\s]+/g);
+  if (!match)
+    return [];
+  return match.map((e2) => e2.replace(/"(.+)"/, "$1").toString());
+}
+function commandNotFound(player, command2) {
+  player.sendMessage({
+    rawtext: [
+      {
+        text: `\xA7c`
+      },
+      {
+        translate: `commands.generic.unknown`,
+        with: [`${command2}`]
+      }
+    ]
+  });
+}
+function noPerm(player, command2) {
+  player.sendMessage({
+    rawtext: [
+      {
+        text: command2.data.invalidPermission ? command2.data.invalidPermission : `\xA7cYou do not have permission to use "${command2.data.name}"`
+      }
+    ]
+  });
+}
+function commandSyntaxFail(player, baseCommand, command2, args, i) {
+  player.sendMessage({
+    rawtext: [
+      {
+        text: `\xA7c`
+      },
+      {
+        translate: `commands.generic.syntax`,
+        with: [`${PREFIX}${baseCommand.data.name} ${args.slice(0, i).join(" ")}`, args[i] ?? " ", args.slice(i + 1).join(" ")]
+      }
+    ]
+  });
+  if (command2.children.length > 1 || !args[i]) {
+    const types = command2.children.map((c) => c.type instanceof LiteralArgumentType ? c.type.name : c.type?.typeName);
+    player.sendMessage(
+      `\xA7c"${args[i] ?? "undefined"}" is not valid! Argument "${[...new Set(command2.children.map((c) => c?.type?.name))][0]}" can be typeof: "${types.join(
+        '", "'
+      )}"`
+    );
+  } else {
+    player.sendMessage(`\xA7c${command2.children[0]?.type?.fail(args[i])}`);
+  }
+}
+function parseLocationArgs([x, y, z], entity) {
+  if (!x || !y || !x)
+    return null;
+  const viewDirection = entity.getViewDirection();
+  const locations = [entity.location.x, entity.location.y, entity.location.z];
+  const viewVectors = [viewDirection.x, viewDirection.y, viewDirection.z];
+  const a = [x, y, z].map((arg) => {
+    const r = parseFloat(arg);
+    return isNaN(r) ? 0 : r;
+  });
+  const b = [x, y, z].map((arg, index) => {
+    return arg.includes("~") ? a[index] + locations[index] : arg.includes("^") ? a[index] + viewVectors[index] : a[index];
+  });
+  return { x: b[0], y: b[1], z: b[2] };
+}
+function sendCallback(cmdArgs, args, event, baseCommand) {
+  const lastArg = args[args.length - 1] ?? baseCommand;
+  const argsToReturn = [];
+  for (const [i, arg] of args.entries()) {
+    if (arg?.type?.name.endsWith("*"))
+      continue;
+    if (arg.type instanceof LocationArgumentType) {
+      argsToReturn.push(parseLocationArgs([cmdArgs[i], cmdArgs[i + 1], cmdArgs[i + 2]], event.sender));
+      continue;
+    }
+    if (arg.type instanceof LiteralArgumentType)
+      continue;
+    argsToReturn.push(arg?.type?.matches(cmdArgs[i]).value ?? cmdArgs[i]);
+  }
+  lastArg.callback(new CommandCallback(event), ...argsToReturn);
+}
+
+// src/database/PlayerLog.ts
+import { world as world4 } from "@minecraft/server";
+var PlayerLog = class {
+  constructor() {
+    this.data = /* @__PURE__ */ new Map();
+    world4.afterEvents.playerLeave.subscribe((data) => {
+      this.data.delete(data.playerId);
+    });
+  }
+  set(player, value) {
+    this.data.set(player.id, value);
+  }
+  get(player) {
+    return this.data.get(player.id);
+  }
+  has(player) {
+    return this.data.has(player.id);
+  }
+  delete(player) {
+    this.data.delete(player.id);
+  }
+  clear() {
+    this.data.clear();
+  }
+  playerIds() {
+    return [...this.data.keys()];
+  }
+  includes(player) {
+    return this.playerIds().includes(player.id);
+  }
+};
+
+// src/lib/Command/index.ts
+var COMMANDS = [];
+var commandCooldowns = new PlayerLog();
+world5.beforeEvents.chatSend.subscribe((data) => {
+  if (!data.message.startsWith(PREFIX))
+    return;
+  data.cancel = true;
+  const args = getChatAugments(data.message, PREFIX);
+  const command2 = COMMANDS.find(
+    (c) => c.depth == 0 && (c.data.name == args[0] || c.data?.aliases?.includes(args[0]))
+  );
+  const event = {
+    message: data.message,
+    sendToTargets: data.sendToTargets,
+    sender: data.sender,
+    targets: data.getTargets()
+  };
+  if (!command2)
+    return commandNotFound(data.sender, args[0]);
+  if (!command2.data?.requires?.(data.sender))
+    return noPerm(event.sender, command2);
+  if (command2.data?.cooldown) {
+    const cooldownData = commandCooldowns.get(data.sender) ?? {};
+    if (Object.keys(cooldownData).length == 0) {
+      cooldownData[command2.data.name] = Date.now();
+      commandCooldowns.set(data.sender, cooldownData);
+    } else {
+      if (Date.now() - cooldownData[command2.data.name] < command2.data.cooldown) {
+        const seconds = Math.abs(
+          Math.ceil(
+            (Date.now() - (cooldownData[command2.data.name] + command2.data.cooldown)) / 1e3
+          )
+        );
+        return data.sender.sendMessage({
+          translate: "commands.default.cooldown",
+          with: [command2.data.name, seconds.toString()]
+        });
+      }
+    }
+  }
+  args.shift();
+  const verifiedCommands = [];
+  const getArg = (start, i) => {
+    if (start.children.length > 0) {
+      const arg = start.children.find((v2) => v2.type?.matches(args[i]).success);
+      if (!arg && !args[i] && start.callback)
+        return void 0;
+      if (!arg)
+        return commandSyntaxFail(event.sender, command2, start, args, i), "fail";
+      if (!arg.data?.requires?.(event.sender))
+        return noPerm(event.sender, arg), "fail";
+      verifiedCommands.push(arg);
+      return getArg(arg, i + 1);
+    }
+  };
+  let v = getArg(command2, 0);
+  if (v == "fail")
+    return;
+  system.run(() => {
+    sendCallback(args, verifiedCommands, event, command2);
+  });
+});
+
+// src/lang/text.ts
+var text = {
+  "api.name": () => "Smelly API",
+  "api.error.unknown": () => "An unknown error has occurred.",
+  "api.database.error.table_name": (a, b) => `The display name ${a} is too long for an objective, it can be at most ${b} characters long`,
+  "api.utilities.formatter.error.ms": (a) => `${a} is not a string or a number`,
+  "api.Providers.form.invalidType": (a, b) => `Type ${a} is not a valid type to add a ${b}`,
+  "modules.protections.cps.clickingToFast": () => `You are clicking to fast! Please click slower!`,
+  "modules.managers.mute.isMuted": () => `\xA7cYou've been temporarily muted in chat.`,
+  "modules.commands.ban.reply": (playerName, duration, reason = "") => `\xA7cBanned \xA7f"\xA7a${playerName}\xA7f" \xA7cfor ${duration} Because: "${reason ?? "No reason Provided"}" \xA7aSuccessfully`,
+  "lockdown.kick.message": () => [
+    `\xA7cYou have been kicked!`,
+    `\xA7aReason: \xA7fServer is currently under LockDown`,
+    `\xA7fServer will be up soon, Try to join later`
+  ],
+  "commands.ban.list.player": (name, reason, expire) => `- "${name}" Because: ${reason}, Expiry ${expire}`,
+  "commands.freeze.list.player": (name, reason) => `- "${name}" Because: ${reason}`,
+  "commands.mutes.list.player": (name, reason, expire) => `- "${name}" Because: ${reason}, Expiry: ${expire}`,
+  "commands.lockdown.confirm": "Are you sure you want to lockdown the server, this will kick all active players and all players who try to join who are not admin"
+};
+
+// src/lib/Command/Command.ts
+var Command = class {
+  constructor(data, type, depth = 0, parent) {
+    this.data = data;
+    this.type = type;
+    this.depth = depth;
+    this.parent = parent;
+    if (!data.requires)
+      data.requires = () => true;
+    this.data = data;
+    this.type = type ?? new LiteralArgumentType(this.data.name);
+    this.children = [];
+    this.depth = depth;
+    this.parent = parent;
+    this.callback = null;
+    COMMANDS.push(this);
+  }
+  argument(type) {
+    const cmd = new Command(
+      this.data,
+      type,
+      this.depth + 1,
+      this
+    );
+    this.children.push(cmd);
+    return cmd;
+  }
+  string(name) {
+    return this.argument(new StringArgumentType(name));
+  }
+  int(name, range) {
+    return this.argument(new IntegerArgumentType(name, range));
+  }
+  array(name, types) {
+    return this.argument(new ArrayArgumentType(name, types));
+  }
+  boolean(name) {
+    return this.argument(new BooleanArgumentType(name));
+  }
+  location(name) {
+    const cmd = this.argument(new LocationArgumentType(name));
+    if (!name.endsWith("*")) {
+      const newArg = cmd.location(name + "_y*").location(name + "_z*");
+      return newArg;
+    }
+    return cmd;
+  }
+  literal(data) {
+    const cmd = new Command(
+      data,
+      new LiteralArgumentType(data.name),
+      this.depth + 1,
+      this
+    );
+    this.children.push(cmd);
+    return cmd;
+  }
+  executes(callback) {
+    this.callback = callback;
+    return this;
+  }
+};
+
+// src/lib/Form/Models/MessageForm.ts
+import { FormCancelationReason, MessageFormData } from "@minecraft/server-ui";
+
+// src/config/form.ts
+var TIMEOUT_THRESHOLD = 200;
+
+// src/lib/Form/Models/MessageForm.ts
+var MessageForm = class {
+  constructor(title, body) {
+    this.title = title;
+    this.body = body;
+    this.form = new MessageFormData();
+    if (title)
+      this.form.title(title);
+    if (body)
+      this.form.body(body);
+    this.triedToShow = 0;
+  }
+  setButton1(text2, callback) {
+    this.button1 = { text: text2, callback };
+    this.form.button1(text2);
+    return this;
+  }
+  setButton2(text2, callback) {
+    this.button2 = { text: text2, callback };
+    this.form.button2(text2);
+    return this;
+  }
+  show(player, onUserClosed) {
+    this.triedToShow = 0;
+    this.form.show(player).then((response) => {
+      if (response.canceled) {
+        if (response.cancelationReason == FormCancelationReason.UserBusy) {
+          if (this.triedToShow > TIMEOUT_THRESHOLD)
+            return player.sendMessage({
+              translate: "forms.actionForm.show.timeout"
+            });
+          this.triedToShow++;
+          this.show(player, onUserClosed);
+        }
+        if (response.cancelationReason == FormCancelationReason.UserClosed)
+          onUserClosed?.();
+        return;
+      }
+      if (response.selection == 0)
+        this.button1?.callback?.();
+      if (response.selection == 1)
+        this.button2?.callback?.();
+    });
+  }
+  forceShow(player, onUserClosed) {
+    this.form.show(player).then((response) => {
+      if (response.canceled) {
+        if (response.cancelationReason == FormCancelationReason.UserBusy) {
+          this.forceShow(player, onUserClosed);
+        }
+        if (response.cancelationReason == FormCancelationReason.UserClosed)
+          onUserClosed?.();
+        return;
+      }
+      if (response.selection == 0)
+        this.button1?.callback?.();
+      if (response.selection == 1)
+        this.button2?.callback?.();
+    });
+  }
+};
+
+// src/lib/Form/utils.ts
+function confirmAction(player, action, onConfirm, onCancel = () => {
+}) {
+  new MessageForm("Confirm To Continue", action).setButton1("Confirm", onConfirm).setButton2("Never Mind", onCancel).show(player, onCancel);
+}
+
+// src/utils.ts
+import {
+  GameMode,
+  MinecraftDimensionTypes,
+  Player as Player4,
+  system as system2,
+  Vector,
+  world as world6
+} from "@minecraft/server";
+
+// src/config/region.ts
+var DEFAULT_REGION_PERMISSIONS = {
+  doorsAndSwitches: true,
+  openContainers: true,
+  pvp: false,
+  allowedEntities: [
+    "minecraft:player",
+    "minecraft:npc",
+    "minecraft:item",
+    "rubedo:inventory",
+    "rubedo:database"
+  ]
+};
+var DOORS_SWITCHES = [
+  "minecraft:acacia_door",
+  "minecraft:acacia_trapdoor",
+  "minecraft:acacia_button",
+  "minecraft:birch_door",
+  "minecraft:birch_trapdoor",
+  "minecraft:birch_button",
+  "minecraft:crimson_door",
+  "minecraft:crimson_trapdoor",
+  "minecraft:crimson_button",
+  "minecraft:dark_oak_door",
+  "minecraft:dark_oak_trapdoor",
+  "minecraft:dark_oak_button",
+  "minecraft:jungle_door",
+  "minecraft:jungle_trapdoor",
+  "minecraft:jungle_button",
+  "minecraft:mangrove_door",
+  "minecraft:mangrove_trapdoor",
+  "minecraft:mangrove_button",
+  "minecraft:spruce_door",
+  "minecraft:spruce_trapdoor",
+  "minecraft:spruce_button",
+  "minecraft:warped_door",
+  "minecraft:warped_trapdoor",
+  "minecraft:warped_button",
+  "minecraft:wooden_door",
+  "minecraft:wooden_button",
+  "minecraft:trapdoor",
+  "minecraft:iron_door",
+  "minecraft:iron_trapdoor",
+  "minecraft:polished_blackstone_button",
+  "minecraft:lever"
+];
+var BLOCK_CONTAINERS = [
+  "minecraft:chest",
+  "minecraft:ender_chest",
+  "minecraft:barrel",
+  "minecraft:trapped_chest",
+  "minecraft:dispenser",
+  "minecraft:dropper",
+  "minecraft:furnace",
+  "minecraft:blast_furnace",
+  "minecraft:lit_furnace",
+  "minecraft:lit_blast_furnace",
+  "minecraft:hopper",
+  "minecraft:shulker_box",
+  "minecraft:undyed_shulker_box",
+  "minecraft:lit_smoker",
+  "minecraft:smoker"
+];
+
+// src/modules/models/Region.ts
+var REGIONS = [];
+var REGIONS_HAVE_BEEN_GRABBED = false;
+var LOWEST_Y_VALUE = -64;
+var HIGHEST_Y_VALUE = 320;
+var Region = class {
+  static getAllRegions() {
+    if (REGIONS_HAVE_BEEN_GRABBED)
+      return REGIONS;
+    const regions = TABLES.regions.values().map(
+      (region) => new Region(
+        region.from,
+        region.to,
+        region.dimensionId,
+        region.permissions,
+        region.key
+      )
+    );
+    regions.forEach((r) => {
+      REGIONS.push(r);
+    });
+    REGIONS_HAVE_BEEN_GRABBED = true;
+    return regions;
+  }
+  static vectorInRegion(vector, dimensionId) {
+    return this.getAllRegions().find(
+      (region) => region.dimensionId == dimensionId && betweenVector3(
+        vector,
+        { x: region.from.x, y: LOWEST_Y_VALUE, z: region.from.z },
+        { x: region.to.x, y: HIGHEST_Y_VALUE, z: region.to.z }
+      )
+    );
+  }
+  static async removeRegionAtPosition(vector, dimensionId) {
+    const region = this.vectorInRegion(vector, dimensionId);
+    if (!region)
+      return false;
+    return TABLES.regions.delete(region.key);
+  }
+  constructor(from, to, dimensionId, permissions, key) {
+    this.from = from;
+    this.to = to;
+    this.dimensionId = dimensionId;
+    this.permissions = permissions ?? DEFAULT_REGION_PERMISSIONS;
+    this.key = key ? key : Date.now().toString();
+    if (!key) {
+      this.update().then(() => {
+        fillBlocksBetween("minecraft:deny" /* Deny */);
+        REGIONS.push(this);
+      });
+    }
+  }
+  async update() {
+    return TABLES.regions.set(this.key, {
+      key: this.key,
+      from: this.from,
+      dimensionId: this.dimensionId,
+      permissions: this.permissions,
+      to: this.to
+    });
+  }
+  async delete() {
+    fillBlocksBetween("minecraft:bedrock" /* Bedrock */);
+    REGIONS = REGIONS.filter((r) => r.key != this.key);
+    return TABLES.regions.delete(this.key);
+  }
+  entityInRegion(entity) {
+    return this.dimensionId == entity.dimension.id && betweenVector3(
+      entity.location,
+      { x: this.from.x, y: LOWEST_Y_VALUE, z: this.from.z },
+      { x: this.to.x, y: HIGHEST_Y_VALUE, z: this.to.z }
+    );
+  }
+  changePermission(key, value) {
+    this.permissions[key] = value;
+    this.update();
+  }
+};
+
+// src/modules/models/Task.ts
+var ChangePlayerRoleTask = class {
+  static getTasks() {
+    return TABLES.tasks.get("changePlayerRole") ?? [];
+  }
+  static getPlayersRoleToSet(playerName) {
+    const tasks = ChangePlayerRoleTask.getTasks();
+    return tasks.find((t) => t.playerName == playerName)?.role;
+  }
+  constructor(playerName, role) {
+    let tasks = ChangePlayerRoleTask.getTasks();
+    tasks.push({ playerName, role });
+    TABLES.tasks.set("changePlayerRole", tasks);
+  }
+};
+
+// src/config/moderation.ts
+var APPEAL_LINK = "https://discord.gg/dMa3A5UYKX";
+var FORBIDDEN_ITEMS = [
+  "minecraft:beehive" /* Beehive */,
+  "minecraft:bee_nest" /* BeeNest */,
+  "minecraft:axolotl_bucket" /* AxolotlBucket */,
+  "minecraft:cod_bucket" /* CodBucket */,
+  "minecraft:tadpole_bucket" /* TadpoleBucket */,
+  "minecraft:tropical_fish_bucket" /* TropicalFishBucket */,
+  "minecraft:salmon_bucket" /* SalmonBucket */,
+  "minecraft:pufferfish_bucket" /* PufferfishBucket */
+];
+var BANNED_ITEMS = [
+  "minecraft:allow" /* Allow */,
+  "minecraft:barrier" /* Barrier */,
+  "minecraft:border_block" /* BorderBlock */,
+  "minecraft:deBug_stick",
+  "minecraft:deny" /* Deny */,
+  "minecraft:jigsaw" /* Jigsaw */,
+  "minecraft:light_block" /* LightBlock */,
+  "minecraft:command_block" /* CommandBlock */,
+  "minecraft:repeating_command_block" /* RepeatingCommandBlock */,
+  "minecraft:chain_command_block" /* ChainCommandBlock */,
+  "minecraft:command_block_minecart" /* CommandBlockMinecart */,
+  "minecraft:structure_block" /* StructureBlock */,
+  "minecraft:structure_void" /* StructureVoid */,
+  "minecraft:bedrock" /* Bedrock */,
+  "minecraft:end_portal_frame" /* EndPortalFrame */,
+  "minecraft:info_update",
+  "minecraft:info_update2",
+  "minecraft:reserved3",
+  "minecraft:reserved4",
+  "minecraft:reserved6",
+  "minecraft:movingBlock",
+  "minecraft:moving_Block",
+  "minecraft:movingBlock",
+  "minecraft:piston_arm_collision",
+  "minecraft:piston_arm_collision",
+  "minecraft:pistonarmcollision",
+  "minecraft:stickyPistonArmCollision",
+  "minecraft:sticky_piston_arm_collision",
+  "minecraft:unknown",
+  "minecraft:glowingoBsidian",
+  "minecraft:invisiBle_Bedrock",
+  "minecraft:invisiBleBedrock",
+  "minecraft:netherreactor",
+  "minecraft:portal",
+  "minecraft:fire",
+  "minecraft:water",
+  "minecraft:lava",
+  "minecraft:flowing_lava",
+  "minecraft:flowing_water",
+  "minecraft:soul_fire"
+];
+var FORBIDDEN_BLOCKS = [
+  "minecraft:dispenser" /* Dispenser */
+];
+var BANNED_BLOCKS = [
+  "minecraft:bedrock" /* Bedrock */,
+  "minecraft:barrier" /* Barrier */,
+  "minecraft:invisible_bedrock" /* InvisibleBedrock */,
+  "minecraft:moving_block" /* MovingBlock */
+];
+var CONTAINERS = [
+  "minecraft:chest" /* Chest */,
+  "minecraft:trapped_chest" /* TrappedChest */,
+  "minecraft:barrel" /* Barrel */,
+  "minecraft:dispenser" /* Dispenser */,
+  "minecraft:dropper" /* Dropper */,
+  "minecraft:furnace" /* Furnace */,
+  "minecraft:lit_furnace" /* LitFurnace */,
+  "minecraft:blast_furnace" /* BlastFurnace */,
+  "minecraft:lit_blast_furnace" /* LitBlastFurnace */,
+  "minecraft:smoker" /* Smoker */,
+  "minecraft:lit_smoker" /* LitSmoker */,
+  "minecraft:hopper" /* Hopper */,
+  "minecraft:shulker_box" /* ShulkerBox */,
+  "minecraft:undyed_shulker_box" /* UndyedShulkerBox */
+];
+
+// src/config/enchantments.ts
+var ENCHANTMENTS = {
+  aquaAffinity: 1,
+  baneOfArthropods: 5,
+  binding: 1,
+  blastProtection: 4,
+  channeling: 1,
+  depthStrider: 3,
+  efficiency: 5,
+  featherFalling: 4,
+  fireAspect: 2,
+  fireProtection: 4,
+  flame: 1,
+  fortune: 3,
+  frostWalker: 2,
+  impaling: 5,
+  infinity: 1,
+  knockback: 2,
+  looting: 3,
+  loyalty: 4,
+  luckOfTheSea: 3,
+  lure: 3,
+  mending: 1,
+  multishot: 1,
+  piercing: 4,
+  power: 5,
+  projectileProtection: 4,
+  protection: 4,
+  punch: 2,
+  quickCharge: 3,
+  respiration: 3,
+  riptide: 3,
+  sharpness: 5,
+  silkTouch: 1,
+  smite: 5,
+  soulSpeed: 3,
+  swiftSneak: 4,
+  thorns: 3,
+  unbreaking: 3,
+  vanishing: 1
+};
+
+// src/utils.ts
+var DIMENSIONS = {
+  overworld: world6.getDimension(MinecraftDimensionTypes.overworld),
+  nether: world6.getDimension(MinecraftDimensionTypes.nether),
+  theEnd: world6.getDimension(MinecraftDimensionTypes.theEnd),
+  "minecraft:overworld": world6.getDimension(MinecraftDimensionTypes.overworld),
+  "minecraft:nether": world6.getDimension(MinecraftDimensionTypes.nether),
+  "minecraft:the_end": world6.getDimension(MinecraftDimensionTypes.theEnd)
+};
+var durations = {
+  y: 317098e-16,
+  w: 6048e5,
+  d: 864e5,
+  h: 36e5,
+  m: 6e4,
+  s: 1e3,
+  ms: 1
+};
+function durationToMs(duration) {
+  const values = duration.split(",");
+  let ms = 0;
+  for (const value of values) {
+    const length = parseInt(value.match(/\d+/)[0]);
+    const unit = value.match(/[a-zA-Z]+/)[0];
+    if (!durations[unit]) {
+      throw new Error(`Invalid duration unit: ${unit}`);
+    }
+    ms += durations[unit] * length;
+  }
+  return ms;
+}
+function msToRelativeTime(timeInMilliseconds) {
+  const now = new Date().getTime();
+  const timeDifference = timeInMilliseconds - now;
+  const timeDifferenceAbs = Math.abs(timeDifference);
+  const millisecondsInSecond = 1e3;
+  const millisecondsInMinute = 60 * millisecondsInSecond;
+  const millisecondsInHour = 60 * millisecondsInMinute;
+  const millisecondsInDay = 24 * millisecondsInHour;
+  const days = Math.floor(timeDifferenceAbs / millisecondsInDay);
+  const hours = Math.floor(
+    timeDifferenceAbs % millisecondsInDay / millisecondsInHour
+  );
+  const minutes = Math.floor(
+    timeDifferenceAbs % millisecondsInHour / millisecondsInMinute
+  );
+  const seconds = Math.floor(
+    timeDifferenceAbs % millisecondsInMinute / millisecondsInSecond
+  );
+  if (timeDifference >= 0) {
+    if (days > 0) {
+      return `in ${days} day${days > 1 ? "s" : ""}`;
+    } else if (hours > 0) {
+      return `in ${hours} hour${hours > 1 ? "s" : ""}`;
+    } else if (minutes > 0) {
+      return `in ${minutes} minute${minutes > 1 ? "s" : ""}`;
+    } else {
+      return `in ${seconds} second${seconds > 1 ? "s" : ""}`;
+    }
+  } else {
+    if (days > 0) {
+      return `${days} day${days > 1 ? "s" : ""} ago`;
+    } else if (hours > 0) {
+      return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+    } else if (minutes > 0) {
+      return `${minutes} minute${minutes > 1 ? "s" : ""} ago`;
+    } else {
+      return `${seconds} second${seconds > 1 ? "s" : ""} ago`;
+    }
+  }
+}
+function sort3DVectors(vector1, vector2) {
+  [vector1.x, vector2.x] = [
+    Math.min(vector1.x, vector2.x),
+    Math.max(vector1.x, vector2.x)
+  ];
+  [vector1.y, vector2.y] = [
+    Math.min(vector1.y, vector2.y),
+    Math.max(vector1.y, vector2.y)
+  ];
+  [vector1.z, vector2.z] = [
+    Math.min(vector1.z, vector2.z),
+    Math.max(vector1.z, vector2.z)
+  ];
+  return [vector1, vector2];
+}
+function betweenVector3(target, vector1, vector2) {
+  const [minVector, maxVector] = sort3DVectors(vector1, vector2);
+  const { x, y, z } = target;
+  return x >= minVector.x && x <= maxVector.x && y >= minVector.y && y <= maxVector.y && z >= minVector.z && z <= maxVector.z;
+}
+function kick(player, message = [], onFail) {
+  if (isServerOwner(player)) {
+    console.warn(`[WARNING]: TRIED TO KICK OWNER`);
+    player.sendMessage(`You have been tried to kick, but you cant!`);
+    return onFail?.();
+  }
+  try {
+    player.runCommandAsync(`kick "${player.name}" \xA7r${message.join("\n")}`);
+    player.triggerEvent("kick");
+  } catch (error) {
+    player.triggerEvent("kick");
+    if (!/"statusCode":-2147352576/.test(error))
+      return;
+    if (onFail)
+      onFail();
+  }
+}
+function getRole(player) {
+  if (player instanceof Player4) {
+    return TABLES.roles.get(player.name) ?? "member";
+  } else {
+    return TABLES.roles.get(player) ?? "member";
+  }
+}
+function setRole(player, value) {
+  if (typeof player == "string") {
+    TABLES.roles.set(player, value);
+    const inGamePlayer = [...world6.getPlayers()].find((p) => p.name == player);
+    if (inGamePlayer) {
+      inGamePlayer.setDynamicProperty("role", value);
+    } else {
+      new ChangePlayerRoleTask(player, value);
+    }
+  } else {
+    TABLES.roles.set(player.name, value);
+    player.setDynamicProperty("role", value);
+  }
+}
+function isServerOwner(player) {
+  return world6.getDynamicProperty("worldsOwner") == player.id;
+}
+function getServerOwner() {
+  const id = world6.getDynamicProperty("worldsOwner");
+  if (!id || id == "")
+    return null;
+  return id;
+}
+function getServerOwnerName() {
+  const ownerId = getServerOwner();
+  if (!ownerId)
+    return null;
+  const ids = TABLES.ids.collection();
+  return Object.keys(ids).find((key) => ids[key] === ownerId);
+}
+function setServerOwner(player) {
+  if (!player)
+    return world6.setDynamicProperty("worldsOwner", "");
+  world6.setDynamicProperty("worldsOwner", player.id.toString());
+}
+function isLockedDown() {
+  return world6.getDynamicProperty("isLockDown") ?? false;
+}
+function setLockDown(val) {
+  world6.setDynamicProperty("isLockDown", val);
+}
+function interpolateVectors(startVector, endVector, step = 1) {
+  if (step <= 0 || step > 1) {
+    throw new Error(
+      "Step size must be between 0 (exclusive) and 1 (inclusive)."
+    );
+  }
+  const interpolatedVectors = [];
+  for (let t = 0; t <= 1; t += step) {
+    const x = startVector.x + t * (endVector.x - startVector.x);
+    const y = startVector.y + t * (endVector.y - startVector.y);
+    const z = startVector.z + t * (endVector.z - startVector.z);
+    interpolatedVectors.push({ x, y, z });
+  }
+  return interpolatedVectors;
+}
+function fillBlocksBetween(blockType) {
+  for (const region of Region.getAllRegions()) {
+    const loc1 = new Vector(
+      region.from.x,
+      region.dimensionId == "minecraft:overworld" ? -64 : 0,
+      region.from.z
+    );
+    const loc2 = new Vector(
+      region.to.x,
+      region.dimensionId == "minecraft:overworld" ? -64 : 0,
+      region.to.z
+    );
+    for (const blockLocation of interpolateVectors(loc1, loc2)) {
+      const block = DIMENSIONS[region.dimensionId].getBlock(
+        blockLocation
+      );
+      if (!block)
+        continue;
+      block.setType(blockType);
+    }
+  }
+}
+function getConfigId(id) {
+  switch (id) {
+    case "banned_items":
+      return TABLES.config.get("banned_items") ?? BANNED_ITEMS;
+    case "banned_blocks":
+      return TABLES.config.get("banned_blocks") ?? BANNED_BLOCKS;
+    case "enchantments":
+      return TABLES.config.get("enchantments") ?? ENCHANTMENTS;
+    case "appealLink":
+      return TABLES.config.get("appealLink") ?? APPEAL_LINK;
+  }
+}
+function setConfigId(key, value) {
+  TABLES.config.set(key, value);
+}
+
+// src/modules/models/Ban.ts
+import { Player as Player5 } from "@minecraft/server";
+function setBan(player, id, duration, reason = "No Reason", by = "Rubedo Auto Mod") {
+  const data = {
+    key: id,
+    playerName: player instanceof Player5 ? player.name : player,
+    date: Date.now(),
+    duration: duration ? durationToMs(duration) : null,
+    expire: duration ? durationToMs(duration) + Date.now() : null,
+    reason,
+    by
+  };
+  TABLES.bans.set(id, data);
+}
+var Ban = class {
+  constructor(player, duration, reason = "No Reason", by = "Rubedo Auto Mod") {
+    if (player instanceof Player5) {
+      setBan(player, player.id, duration, reason, by);
+    } else {
+      setBan(player, TABLES.ids.get(player), duration, reason, by);
+    }
+  }
+};
+
+// src/modules/commands/ban.ts
+function ban(ctx, player, duration, reason, by) {
+  if (TABLES.bans.get(TABLES.ids.get(player)))
+    return ctx.sender.sendMessage(`\xA7c${player} is already banned`);
+  ctx.sender.sendMessage(`\xA7aClose chat to confirm`);
+  confirmAction(
+    ctx.sender,
+    `Are you sure you want to ban ${player}, for ${duration ?? "forever"}`,
+    () => {
+      new Ban(player, duration, reason, ctx.sender.name);
+      ctx.sender.sendMessage(
+        text["modules.commands.ban.reply"](player, duration, reason)
+      );
+    }
+  );
+}
+var root = new Command({
+  name: "ban",
+  description: "Manage bans",
+  requires: (player) => ["admin", "moderator"].includes(getRole(player))
+});
+root.literal({
+  name: "add",
+  description: "Bans a player"
+}).argument(new ArgumentTypes.playerName()).executes((ctx, player) => {
+  ban(ctx, player, null, null, ctx.sender.name);
+}).argument(new ArgumentTypes.duration("duration")).executes((ctx, player, duration) => {
+  ban(ctx, player, duration, null, ctx.sender.name);
+}).string("reason").executes((ctx, player, duration, reason) => {
+  ban(ctx, player, duration, reason, ctx.sender.name);
+});
+root.literal({
+  name: "remove",
+  description: "un-bans a player"
+}).argument(new ArgumentTypes.playerName("playerName")).executes((ctx, playerName) => {
+  const banData = TABLES.bans.values().find((ban2) => ban2.playerName == playerName);
+  if (!banData)
+    return ctx.sender.sendMessage(`${playerName} is not banned`);
+  if (TABLES.bans.delete(banData.key)) {
+    ctx.sender.sendMessage(`\xA7a${playerName}\xA7r has been Unbanned!`);
+  } else {
+    ctx.sender.sendMessage(`\xA7cFailed to un-ban ${playerName}`);
+  }
+});
+root.literal({
+  name: "list",
+  description: "Lists all bans"
+}).executes((ctx) => {
+  const bans = TABLES.bans.values();
+  if (bans.length == 0)
+    return ctx.sender.sendMessage(`\xA7cNo one is banned!`);
+  ctx.sender.sendMessage(`\xA72--- Showing Bans (${bans.length}) ---`);
+  for (const ban2 of bans) {
+    ctx.sender.sendMessage(
+      text["commands.ban.list.player"](
+        ban2.playerName,
+        ban2.reason,
+        ban2.expire ? msToRelativeTime(ban2.duration) : "Forever"
+      )
+    );
+  }
+});
+
+// src/modules/commands/database.ts
+var root2 = new Command({
+  name: "database",
+  description: "Manages database",
+  requires: (player) => player.isOp()
+});
+root2.literal({
+  name: "reload",
+  description: "Re-Grabs database data",
+  requires: (player) => player.isOp()
+}).executes((ctx) => {
+  ctx.sender.sendMessage(`Reloaded Database data!`);
+});
+root2.literal({
+  name: "reset",
+  description: "Resets all database data!",
+  requires: (player) => player.isOp()
+}).executes((ctx) => {
+  ctx.sender.sendMessage(`\xA7aClose chat to confirm Reset of database.`);
+  confirmAction(
+    ctx.sender,
+    "Are you sure you want to reset all Database Data! This cannot be undone.",
+    () => {
+      Object.values(TABLES).forEach((t) => t.clear());
+      ctx.sender.sendMessage("Reset All Database data!");
+    }
+  );
+});
+root2.literal({
+  name: "resetTable",
+  description: "Resets a given table!",
+  requires: (player) => player.isOp()
+}).array("table", Object.keys(TABLES)).executes((ctx, table) => {
+  confirmAction(
+    ctx.sender,
+    `Are you sure you want to reset all Database Data from table: ${table}! This cannot be undone.`,
+    () => {
+      TABLES[table].clear();
+      ctx.sender.sendMessage("Reset All Database data!");
+    }
+  );
+});
+root2.literal({
+  name: "collection",
+  description: "Grabs a collection from a given table!",
+  requires: (player) => player.isOp()
+}).array("table", Object.keys(TABLES)).executes((ctx, table) => {
+  const data = TABLES[table].collection();
+  ctx.sender.sendMessage(JSON.stringify(data));
+});
+root2.literal({
+  name: "get",
+  description: "Gets the value of a key on a given table.",
+  requires: (player) => player.isOp()
+}).array("table", Object.keys(TABLES)).string("key").executes((ctx, table, key) => {
+  const value = TABLES[table].get(key);
+  ctx.sender.sendMessage(
+    `Value for key: ${key}, on table: ${table}, is ${value}`
+  );
+});
+root2.literal({
+  name: "tableIds",
+  description: "Returns a list of all the tableIds",
+  requires: (player) => player.isOp()
+}).executes((ctx) => {
+  ctx.sender.sendMessage(
+    `\xA7aCurrent Table Ids:\xA7r
+- ${Object.keys(TABLES).join("\n- ")}`
+  );
+});
+
+// src/modules/commands/ecwipe.ts
+new Command({
+  name: "ecwipe",
+  description: "Clears a players ender chest",
+  requires: (player) => getRole(player) == "admin"
+}).argument(new ArgumentTypes.player("player")).executes((ctx, player) => {
+  for (let i = 0; i < 27; i++) {
+    player.runCommandAsync(`replaceitem entity @s slot.enderchest ${i} air`);
+  }
+  ctx.sender.sendMessage(`\xA7aCleared "${player.name}"'s Ender chest!`);
+});
+
+// src/modules/models/Freeze.ts
+var Freeze = class {
+  constructor(player, reason = "No Reason") {
+    const data = {
+      playerName: player.name,
+      key: player.id,
+      reason,
+      location: {
+        x: player.location.x,
+        y: player.location.y,
+        z: player.location.z,
+        dimension: player.dimension.id
+      }
+    };
+    TABLES.freezes.set(player.id, data);
+  }
+};
+
+// src/modules/commands/freeze.ts
+var root3 = new Command({
+  name: "freeze",
+  description: "Manage Freezes",
+  requires: (player) => ["admin", "moderator"].includes(getRole(player))
+});
+root3.literal({
+  name: "add",
+  description: "Freezes a player"
+}).argument(new ArgumentTypes.player("player")).string("reason").executes((ctx, player, reason) => {
+  new Freeze(player, reason);
+  ctx.sender.sendMessage(
+    `\xA7cFroze \xA7f"\xA7a${player.name}\xA7f" Because: "${reason}" \xA7aSuccessfully`
+  );
+  player.sendMessage(
+    `\xA7cYou have been frozen by \xA7f"\xA7a${ctx.sender.name}\xA7f" Because: "${reason}"`
+  );
+});
+root3.literal({
+  name: "remove",
+  description: "unfreezes a player"
+}).argument(new ArgumentTypes.playerName("playerName")).executes((ctx, playerName) => {
+  const freeze = TABLES.freezes.values().find((freeze2) => freeze2.playerName == playerName);
+  if (!freeze)
+    return ctx.sender.sendMessage(`${playerName} is not frozen`);
+  TABLES.freezes.delete(freeze.key);
+  ctx.sender.sendMessage(`\xA7a${playerName}\xA7r has been UnFrozen!`);
+});
+root3.literal({
+  name: "list",
+  description: "Lists all freezes"
+}).executes((ctx) => {
+  const freezes = TABLES.freezes.values();
+  if (freezes.length == 0)
+    return ctx.sender.sendMessage(`\xA7cNo one is frozen!`);
+  ctx.sender.sendMessage(`\xA72--- Showing Freezes (${freezes.length}) ---`);
+  for (const freeze of freezes) {
+    ctx.sender.sendMessage(
+      text["commands.freeze.list.player"](freeze.playerName, freeze.reason)
+    );
+  }
+});
+
+// src/modules/commands/help.ts
+var CommandNameArgumentType = class {
+  constructor(name) {
+    this.name = name;
+    this.typeName = "CommandName";
+  }
+  matches(value) {
+    return {
+      success: Boolean(COMMANDS.find((c) => c.depth == 0 && c.data.name == value)),
+      value
+    };
+  }
+  fail(value) {
+    return `${value} should be a command name!`;
+  }
+};
+function sendCommandType(baseCommand, args, player) {
+  player.sendMessage(
+    `${PREFIX}${baseCommand.data.name} ${args.map((a) => a.type ? a.type.typeName == "literal" ? a.data.name : `<${a.type.name}: ${a.type.typeName}>` : null).filter((a) => a).join(" ")}`
+  );
+}
+function sendArguments(bc, c, args, p) {
+  if (!c.data?.requires?.(p))
+    return;
+  if (c.callback) {
+    sendCommandType(bc, c.depth == 0 ? args : args.concat(c), p);
+  }
+  if (c.children.length > 0) {
+    for (const child of c.children) {
+      sendArguments(bc, child, c.depth == 0 ? args : args.concat(c), p);
+    }
+  }
+}
+function sendPageHeader(player, p, maxPages) {
+  player.sendMessage({
+    rawtext: [
+      {
+        text: `\xA72--- Showing help page ${p} of ${maxPages} (${PREFIX}help <page: int>) ---`
+      }
+    ]
+  });
+}
+function getMaxPages(player) {
+  const cmds = COMMANDS.filter((c) => c.depth == 0 && c.data?.requires?.(player));
+  if (cmds.length == 0)
+    return 0;
+  return Math.ceil(cmds.length / 5);
+}
+var root4 = new Command({
+  name: "help",
+  description: "Provides help/list of commands.",
+  aliases: ["?", "h"]
+}).executes((ctx) => {
+  const maxPages = getMaxPages(ctx.sender);
+  const cmds = COMMANDS.filter((c) => c.depth == 0 && (c.data?.requires?.(ctx.sender) ?? false)).slice(1 * 5 - 5, 1 * 5);
+  sendPageHeader(ctx.sender, 1, maxPages);
+  for (const cmd of cmds) {
+    sendArguments(cmd, cmd, [], ctx.sender);
+  }
+});
+root4.int("page").executes((ctx, p) => {
+  const maxPages = getMaxPages(ctx.sender);
+  if (p > maxPages)
+    p = maxPages;
+  const cmds = COMMANDS.filter((c) => c.depth == 0 && c.data?.requires?.(ctx.sender)).slice(p * 5 - 5, p * 5);
+  sendPageHeader(ctx.sender, p, maxPages);
+  for (const cmd of cmds) {
+    sendArguments(cmd, cmd, [], ctx.sender);
+  }
+});
+root4.argument(new CommandNameArgumentType("command")).executes((ctx, command2) => {
+  const cmd = COMMANDS.filter((c) => c.depth == 0 && c.data.name == command2)[0];
+  sendArguments(cmd, cmd, [], ctx.sender);
+});
+
+// src/modules/commands/lockdown.ts
+import { world as world7 } from "@minecraft/server";
+new Command({
+  name: "lockdown",
+  description: "Toggles the servers lockdown, meaning no one can join",
+  requires: (player) => getRole(player) == "admin"
+}).executes((ctx) => {
+  if (isLockedDown()) {
+    setLockDown(false);
+    ctx.sender.sendMessage(`\xA7aUnlocked the server!`);
+  } else {
+    ctx.sender.sendMessage(`\xA7aClose chat to confirm lockdown`);
+    confirmAction(ctx.sender, text["commands.lockdown.confirm"], () => {
+      setLockDown(true);
+      for (const player of world7.getPlayers()) {
+        if (getRole(player) == "admin")
+          continue;
+        kick(player, text["lockdown.kick.message"]());
+      }
+      world7.sendMessage(`\xA7l\xA7cServer is now LOCKED!`);
+    });
+  }
+});
+
+// src/modules/models/Mute.ts
+var Mute = class {
+  static getMuteData(player) {
+    return TABLES.mutes.get(player.name);
+  }
+  constructor(player, duration, reason = "No Reason", by = "Rubedo Auto Mod") {
+    const msLength = duration ? durationToMs(duration) : null;
+    const data = {
+      playerName: player.name,
+      date: Date.now(),
+      duration: msLength,
+      expire: msLength ? msLength + Date.now() : null,
+      reason,
+      by
+    };
+    TABLES.mutes.set(player.name, data);
+  }
+};
+
+// src/modules/commands/mute.ts
+var root5 = new Command({
+  name: "mute",
+  description: "Manage Mutes",
+  requires: (player) => ["admin", "moderator"].includes(getRole(player))
+});
+root5.literal({
+  name: "add",
+  description: "Mutes a player"
+}).argument(new ArgumentTypes.player("player")).argument(new ArgumentTypes.duration("duration")).string("reason").executes((ctx, player, duration, reason) => {
+  new Mute(player, duration, reason, ctx.sender.name);
+  ctx.sender.sendMessage(
+    `\xA7cMuted \xA7f"\xA7a${player.name}\xA7f" \xA7cfor ${duration} Because: "${reason}" \xA7aSuccessfully`
+  );
+  player.sendMessage(
+    `\xA7cYou have been muted by \xA7f"${ctx.sender.name}" \xA7cfor ${duration} Because: "${reason}"`
+  );
+});
+root5.literal({
+  name: "remove",
+  description: "un-mutes a player"
+}).argument(new ArgumentTypes.playerName("playerName")).executes((ctx, playerName) => {
+  const mute = TABLES.mutes.values().find((mute2) => mute2.playerName == playerName);
+  if (!mute)
+    return ctx.sender.sendMessage(`${playerName} is not muted!`);
+  TABLES.mutes.delete(mute.playerName);
+  try {
+    ctx.sender.runCommandAsync(`ability "${playerName}" mute false`);
+  } catch (error) {
+    console.warn(
+      `[Warning]: Command '-mute' Cannot fully proceed because command 'ability' does not exist! Please enable Education Edition!`
+    );
+  }
+  ctx.sender.sendMessage(`\xA7a${playerName}\xA7r has been UnMuted!`);
+});
+root5.literal({
+  name: "list",
+  description: "Lists all freezes"
+}).executes((ctx) => {
+  const mutes = TABLES.mutes.values();
+  if (mutes.length == 0)
+    return ctx.sender.sendMessage(`\xA7cNo one is muted!`);
+  ctx.sender.sendMessage(`\xA72--- Showing Mutes (${mutes.length}) ---`);
+  for (const mute of mutes) {
+    ctx.sender.sendMessage(
+      text["commands.mutes.list.player"](
+        mute.playerName,
+        mute.reason,
+        mute.expire ? msToRelativeTime(mute.expire) : "Forever"
+      )
+    );
+  }
+});
+
+// src/modules/models/Npc.ts
+var Npc = class {
+  static isValid(entity) {
+    if (entity.typeId != "minecraft:npc")
+      return false;
+    if (NPC_LOCATIONS.find((l) => l == entity.location))
+      return true;
+    return TABLES.npcs.keys().find((key) => entity.id == key) ? true : false;
+  }
+  constructor(location, dimension) {
+    NPC_LOCATIONS.push(location);
+    const entity = dimension.spawnEntity("minecraft:npc", location);
+    const data = {
+      dimension: entity.dimension.id,
+      x: entity.location.x,
+      y: entity.location.y,
+      z: entity.location.z
+    };
+    TABLES.npcs.set(entity.id, data);
+    clearNpcLocations();
+  }
+};
+
+// src/modules/commands/npc.ts
+new Command({
+  name: "npc",
+  description: "Spawns a npc at your coordinates",
+  requires: (player) => getRole(player) == "admin"
+}).executes((ctx) => {
+  new Npc(ctx.sender.location, ctx.sender.dimension);
+  ctx.sender.sendMessage(`Spawned a verified npc at your current location`);
+});
+
+// src/modules/commands/ping.ts
+import { system as system3 } from "@minecraft/server";
+async function getServerTPS() {
+  let startTime = Date.now();
+  let ticks = 0;
+  return new Promise((resolve) => {
+    let s = system3.runTimeout(() => {
+      if (Date.now() - startTime < 1e3) {
+        ticks++;
+      } else {
+        system3.clearRun(s);
+        resolve(ticks);
+      }
+    });
+  });
+}
+new Command({
+  name: "ping",
+  description: "Returns the current Ticks Per Second of the servers ping"
+}).executes(async (ctx) => {
+  let ticks = await getServerTPS();
+  ctx.sender.sendMessage(
+    `\xA7aCurrent Ticks Per Second: ${ticks > 18 ? "\xA7f{ \xA7aGood" : ticks > 13 ? "\xA7f{ \xA7eOk" : "\xA7f{ \xA7cSevere"} ${ticks} \xA7f}`
+  );
+});
+
+// src/modules/commands/region.ts
+var command = new Command({
+  name: "region",
+  description: "Create a Region",
+  requires: (player) => getRole(player) == "admin"
+});
+command.literal({
+  name: "add",
+  description: "Adds a new protection region"
+}).int("from_x").int("from_z").int("to_x").int("to_z").executes((ctx, from_x, from_z, to_x, to_z) => {
+  new Region(
+    { x: from_x, z: from_z },
+    { x: to_x, z: to_z },
+    ctx.sender.dimension.id
+  );
+  ctx.sender.sendMessage(
+    `Created Region From ${from_x} -64 ${from_z} ${to_x} 320 ${to_z}`
+  );
+});
+command.literal({
+  name: "remove",
+  description: "Removes a region at the players current position"
+}).executes((ctx) => {
+  const r = Region.removeRegionAtPosition(
+    ctx.sender.location,
+    ctx.sender.dimension.id
+  );
+  if (r) {
+    ctx.sender.sendMessage(
+      `Removed Region at ${JSON.stringify(ctx.sender.location)}`
+    );
+  } else {
+    ctx.sender.sendMessage(
+      `Failed to find/remove region at ${JSON.stringify(ctx.sender.location)}`
+    );
+  }
+});
+command.literal({
+  name: "removeAll",
+  description: "Removes all regions"
+}).executes((ctx) => {
+  Region.getAllRegions().forEach((r) => r.delete());
+  ctx.sender.sendMessage(`Removed All regions`);
+});
+command.literal({
+  name: "list",
+  description: "Lists all regions and positions"
+}).executes((ctx) => {
+  const regions = Region.getAllRegions();
+  for (const region of regions) {
+    ctx.sender.sendMessage(
+      `Region from ${region.from.x}, ${region.from.z} to ${region.to.x}, ${region.to.z} in dimension ${region.dimensionId}`
+    );
+  }
+  if (regions.length == 0)
+    return ctx.sender.sendMessage(`No regions have been made yet`);
+});
+var permission = command.literal({
+  name: "permission",
+  description: "Handles permissions for regions"
+});
+permission.literal({
+  name: "set",
+  description: "Sets a certain permission on the region the player is currently in to a value"
+}).array("key", ["doorsAndSwitches", "openContainers", "pvp"]).boolean("value").executes((ctx, key, value) => {
+  const region = Region.vectorInRegion(
+    ctx.sender.location,
+    ctx.sender.dimension.id
+  );
+  if (!region)
+    return ctx.sender.sendMessage(`You are not in a region`);
+  region.changePermission(key, value);
+  ctx.sender.sendMessage(`Changed permission ${key} to ${value}`);
+});
+permission.literal({
+  name: "list",
+  description: "Lists the permissions for the current region"
+}).executes((ctx) => {
+  const region = Region.vectorInRegion(
+    ctx.sender.location,
+    ctx.sender.dimension.id
+  );
+  if (!region)
+    return ctx.sender.sendMessage(`You are not in a region`);
+  ctx.sender.sendMessage(
+    `Current region permissions ${JSON.stringify(region.permissions)}`
+  );
+});
+var entityCommands = permission.literal({
+  name: "entities",
+  description: "Holds the subCommands for adding or removing allowedEntities"
+});
+entityCommands.literal({
+  name: "add",
+  description: "Adds a entity to the allowed entities list"
+}).string("entity").executes((ctx, entity) => {
+  const region = Region.vectorInRegion(
+    ctx.sender.location,
+    ctx.sender.dimension.id
+  );
+  if (!region)
+    return ctx.sender.sendMessage(`You are not in a region`);
+  const currentAllowedEntities = region.permissions.allowedEntities;
+  currentAllowedEntities.push(entity);
+  region.changePermission("allowedEntities", currentAllowedEntities);
+  ctx.sender.sendMessage(
+    `Added entity ${entity} to the allowed entities of the region your currently standing in`
+  );
+});
+entityCommands.literal({
+  name: "remove",
+  description: "Removes a entity from the allowed entities in the region"
+}).string("entity").executes((ctx, entity) => {
+  const region = Region.vectorInRegion(
+    ctx.sender.location,
+    ctx.sender.dimension.id
+  );
+  if (!region)
+    return ctx.sender.sendMessage(`You are not in a region`);
+  let currentAllowedEntities = region.permissions.allowedEntities;
+  if (!currentAllowedEntities.includes(entity))
+    return ctx.sender.sendMessage(
+      `The entity ${entity} is not allowed to enter the region`
+    );
+  currentAllowedEntities = currentAllowedEntities.filter((v) => v != entity);
+  region.changePermission("allowedEntities", currentAllowedEntities);
+  ctx.sender.sendMessage(
+    `Removed entity ${entity} to the allowed entities of the region your currently standing in`
+  );
+});
+
+// src/types.ts
+var ROLES = /* @__PURE__ */ ((ROLES2) => {
+  ROLES2[ROLES2["member"] = 0] = "member";
+  ROLES2[ROLES2["admin"] = 1] = "admin";
+  ROLES2[ROLES2["moderator"] = 2] = "moderator";
+  ROLES2[ROLES2["builder"] = 3] = "builder";
+  return ROLES2;
+})(ROLES || {});
+
+// src/modules/commands/role.ts
+var StringIsNumber = (value) => isNaN(Number(value)) === false;
+function ToArray(enumme) {
+  return Object.keys(enumme).filter(StringIsNumber).map((key) => enumme[key]);
+}
+var root6 = new Command({
+  name: "role",
+  description: "Changes the role for a player",
+  requires: (player) => getRole(player) == "admin" || isServerOwner(player)
+});
+root6.literal({
+  name: "set",
+  description: "Sets the role for a player"
+}).argument(new ArgumentTypes.playerName("playerName")).argument(new ArgumentTypes.array("role", ToArray(ROLES))).executes((ctx, playerName, role) => {
+  setRole(playerName, role);
+  ctx.sender.sendMessage(`Changed role of ${playerName} to ${role}`);
+});
+root6.literal({
+  name: "get",
+  description: "Gets the role of a player"
+}).argument(new ArgumentTypes.playerName("playerName")).executes((ctx, playerName) => {
+  const role = getRole(playerName);
+  ctx.sender.sendMessage(`${playerName} has role: ${role}`);
+});
+var ownerRoot = root6.literal({
+  name: "owner",
+  description: "Manages the owner"
+});
+ownerRoot.literal({
+  name: "get",
+  description: "Gets the owner of the world"
+}).executes((ctx) => {
+  const ownerId = getServerOwner();
+  const ids = TABLES.ids.collection();
+  const ownerName = Object.keys(ids).find((key) => ids[key] === ownerId);
+  ctx.sender.sendMessage(`\xA7aServer Owner: ${ownerName} (id: ${ownerId})`);
+});
+ownerRoot.literal({
+  name: "transfer",
+  description: "Transfers the owner of the world",
+  requires: (player) => isServerOwner(player)
+}).argument(new ArgumentTypes.player()).executes((ctx, player) => {
+  confirmAction(
+    ctx.sender,
+    `Are you sure you want to transfer the server ownership to ${player.name}, this action is not reversible!`,
+    () => {
+      setServerOwner(player);
+      ctx.sender.sendMessage(
+        `\xA7aSet the server Owner to: ${player.name} (id: ${player.id})`
+      );
+    }
+  );
+  ctx.sender.sendMessage(`\xA7aClose chat to confirm`);
+});
+ownerRoot.literal({
+  name: "clear",
+  description: "clear's the owner of the world",
+  requires: (player) => isServerOwner(player)
+}).executes((ctx) => {
+  confirmAction(
+    ctx.sender,
+    "Are you sure you want to clear the server owner, this action is not reversible!",
+    () => {
+      setServerOwner(null);
+      ctx.sender.sendMessage(
+        `\xA7aCleared the server owner! run "/reload" or reload world to run "/function start" again!`
+      );
+    }
+  );
+  ctx.sender.sendMessage(`\xA7aClose chat to confirm`);
+});
+
+// src/lib/Form/Models/ModelForm.ts
+import { FormCancelationReason as FormCancelationReason2, ModalFormData } from "@minecraft/server-ui";
+
+// src/lib/Form/Models/FormCallback.ts
+var FormCallback = class {
+  constructor(form, player, callback, formValues) {
+    this.form = form;
+    this.player = player;
+    this.callback = callback;
+    this.formValues = formValues;
+  }
+  error(message) {
+    new MessageForm("Error", message).setButton1("Return to form", () => {
+      const args = this.form.args;
+      this.form.clearForm();
+      for (const [i, arg] of args.entries()) {
+        switch (arg.type) {
+          case "dropdown":
+            this.form.addDropdown(arg.label, arg.options, this.formValues[i]);
+            break;
+          case "slider":
+            this.form.addSlider(
+              arg.label,
+              arg.minimumValue,
+              arg.maximumValue,
+              arg.valueStep,
+              this.formValues[i]
+            );
+            break;
+          case "textField":
+            this.form.addTextField(
+              arg.label,
+              arg.placeholderText,
+              this.formValues[i]
+            );
+            break;
+          case "toggle":
+            this.form.addToggle(arg.label, this.formValues[i]);
+          default:
+            break;
+        }
+      }
+      this.form.show(this.player, this.callback);
+    }).setButton2("Cancel").show(this.player);
+  }
+};
+
+// src/lib/Form/Models/ModelForm.ts
+var ModalForm = class {
+  constructor(title) {
+    this.title = title;
+    this.form = new ModalFormData();
+    if (title)
+      this.form.title(title);
+    this.args = [];
+  }
+  clearForm() {
+    this.form = new ModalFormData();
+    this.args = [];
+  }
+  addDropdown(label, options, defaultValueIndex) {
+    this.args.push({ type: "dropdown", options });
+    this.form.dropdown(label, options, defaultValueIndex);
+    return this;
+  }
+  addSlider(label, minimumValue, maximumValue, valueStep, defaultValue) {
+    this.args.push({
+      type: "slider",
+      label,
+      minimumValue,
+      maximumValue,
+      valueStep
+    });
+    this.form.slider(
+      label,
+      minimumValue,
+      maximumValue,
+      valueStep,
+      defaultValue
+    );
+    return this;
+  }
+  addToggle(label, defaultValue) {
+    this.args.push({ type: "toggle", label });
+    this.form.toggle(label, defaultValue);
+    return this;
+  }
+  addTextField(label, placeholderText, defaultValue) {
+    this.args.push({
+      type: "textField",
+      label,
+      placeholderText
+    });
+    this.form.textField(label, placeholderText, defaultValue);
+    return this;
+  }
+  show(player, callback, onUserClosed) {
+    this.triedToShow = 0;
+    this.form.show(player).then((response) => {
+      if (response.canceled) {
+        if (response.cancelationReason == FormCancelationReason2.UserBusy) {
+          if (this.triedToShow > TIMEOUT_THRESHOLD)
+            return player.sendMessage({
+              translate: "forms.actionForm.show.timeout"
+            });
+          this.triedToShow++;
+          this.show(player, callback, onUserClosed);
+        }
+        if (response.cancelationReason == FormCancelationReason2.UserClosed)
+          onUserClosed?.();
+        return;
+      }
+      if (!response.formValues)
+        return;
+      callback(
+        new FormCallback(this, player, callback, response.formValues),
+        ...response.formValues.map(
+          (v, i) => this.args[i].type == "dropdown" ? this.args[i].options?.[v] : v
+        )
+      );
+    });
+  }
+  forceShow(player, callback, onUserClosed) {
+    this.form.show(player).then((response) => {
+      if (response.canceled) {
+        if (response.cancelationReason == FormCancelationReason2.UserBusy) {
+          this.forceShow(player, callback, onUserClosed);
+        }
+        if (response.cancelationReason == FormCancelationReason2.UserClosed)
+          onUserClosed?.();
+        return;
+      }
+      if (!response.formValues)
+        return;
+      callback(
+        new FormCallback(this, player, callback, response.formValues),
+        ...response.formValues.map(
+          (v, i) => this.args[i].type == "dropdown" ? this.args[i].options?.[v] : v
+        )
+      );
+    });
+  }
+};
+
+// src/lib/Form/Models/ActionForm.ts
+import { ActionFormData, FormCancelationReason as FormCancelationReason3 } from "@minecraft/server-ui";
+var ActionForm = class {
+  constructor(title, body) {
+    this.title = title;
+    this.body = body;
+    this.form = new ActionFormData();
+    if (title)
+      this.form.title(title);
+    if (body)
+      this.form.body(body);
+    this.buttons = [];
+    this.triedToShow = 0;
+  }
+  addButton(text2, iconPath, callback, locked) {
+    this.buttons.push({
+      text: text2,
+      iconPath,
+      callback
+    });
+    if (typeof text2 == "string") {
+      text2 = (locked ? " " : "") + text2;
+    } else {
+      text2.text = (locked ? " " : "") + text2.text;
+    }
+    this.form.button(text2, iconPath);
+    return this;
+  }
+  show(player, onUserClosed) {
+    this.triedToShow = 0;
+    this.form.show(player).then((response) => {
+      if (response.canceled) {
+        if (response.cancelationReason == FormCancelationReason3.UserBusy) {
+          if (this.triedToShow > TIMEOUT_THRESHOLD)
+            return player.sendMessage({
+              translate: "forms.actionForm.show.timeout"
+            });
+          this.triedToShow++;
+          this.show(player, onUserClosed);
+        }
+        if (response.cancelationReason == FormCancelationReason3.UserClosed)
+          onUserClosed?.();
+        return;
+      }
+      if (response.selection != null)
+        this.buttons[response.selection].callback?.();
+    });
+  }
+  forceShow(player, onUserClosed) {
+    this.form.show(player).then((response) => {
+      if (response.canceled) {
+        if (response.cancelationReason == FormCancelationReason3.UserBusy) {
+          this.forceShow(player, onUserClosed);
+        }
+        if (response.cancelationReason == FormCancelationReason3.UserClosed)
+          onUserClosed?.();
+        return;
+      }
+      if (response.selection != null)
+        this.buttons[response.selection].callback?.();
+    });
+  }
+};
+
+// src/modules/forms/settings.ts
+function manageBannedItemsForm(player) {
+  new ActionForm("Manage Banned Items").addButton("Remove a Banned Item", null, () => {
+    removeBannedItemForm(player);
+  }).addButton("Ban an item", null, () => {
+    addBannedItemForm(player);
+  }).show(player);
+}
+function removeBannedItemForm(player) {
+  new ModalForm("Remove Banned Items").addDropdown("Select item to remove", getConfigId("banned_items")).show(player, (ctx, item) => {
+    let items = getConfigId("banned_items");
+    items = items.filter((p) => p != item);
+    setConfigId("banned_items", items);
+    player.sendMessage(`Removed Banned item "${item}"`);
+  });
+}
+function addBannedItemForm(player) {
+  new ModalForm("Add Banned Item").addTextField("Item Id", "minecraft:string").show(player, (ctx, item) => {
+    let items = getConfigId("banned_items");
+    if (items.includes(item))
+      return ctx.error(`\xA7cItem "${item}" is already banned`);
+    items.push(item);
+    setConfigId("banned_items", items);
+    player.sendMessage(`Banned the item "${item}"`);
+  });
+}
+function manageBannedBlocksForm(player) {
+  new ActionForm("Manage Banned Blocks").addButton("Remove a Banned Block", null, () => {
+    removeBannedBlockForm(player);
+  }).addButton("Ban an block", null, () => {
+    addBannedBlockForm(player);
+  }).show(player);
+}
+function removeBannedBlockForm(player) {
+  new ModalForm("Remove Banned Block").addDropdown("Select block to remove", getConfigId("banned_blocks")).show(player, (ctx, block) => {
+    let blocks = getConfigId("banned_blocks");
+    blocks = blocks.filter((p) => p != block);
+    setConfigId("banned_blocks", blocks);
+    player.sendMessage(`Removed Banned block "${block}"`);
+  });
+}
+function addBannedBlockForm(player) {
+  new ModalForm("Add Banned Block").addTextField("Block Id", "minecraft:barrier").show(player, (ctx, block) => {
+    let blocks = getConfigId("banned_blocks");
+    if (blocks.includes(block))
+      return ctx.error(`\xA7cBlock "${block}" is already banned`);
+    blocks.push(block);
+    setConfigId("banned_blocks", blocks);
+    player.sendMessage(`Banned the block "${block}"`);
+  });
+}
+function manageEnchantmentLevelsForm(player) {
+  new ModalForm("Manage Enchantment Levels").addDropdown("Enchantment to change", Object.keys(ENCHANTMENTS), 0).addTextField("Level (number)", "5").show(player, (ctx, enchantment, levelString) => {
+    if (isNaN(levelString))
+      return ctx.error(
+        `\xA7c"${levelString}" is not a number, please enter a value like, "3", "9", etc.`
+      );
+    const level = parseInt(levelString);
+    let enchants = getConfigId("enchantments");
+    enchants[enchantment] = level;
+    setConfigId("enchantments", enchants);
+    player.sendMessage(`Set max level for ${enchantment} to ${level}`);
+  });
+}
+function manageAppealLinkForm(player) {
+  new ModalForm("Manage Appeal Link").addTextField("Appeal Link", APPEAL_LINK).show(player, (ctx, link) => {
+    setConfigId("appealLink", link);
+    player.sendMessage(`Changed the servers appeal link to ${link}`);
+  });
+}
+
+// src/protections.ts
+var PROTECTIONS = {};
+TABLES.protections.onLoad(() => {
+  for (const protection4 of Object.values(PROTECTIONS)) {
+    if (!protection4.getConfig().enabled)
+      continue;
+    protection4.enable();
+  }
+});
+
+// src/modules/forms/automod.ts
+function showAutoModHomeForm(player) {
+  const form = new ActionForm("Manage Protections");
+  for (const protection4 of Object.values(PROTECTIONS)) {
+    form.addButton(protection4.name, protection4.iconPath, () => {
+      showProtectionConfig(protection4, player);
+    });
+  }
+  form.addButton("Back", "textures/ui/arrow_dark_left_stretch.png", () => {
+    showHomeForm(player);
+  }).show(player);
+}
+function showProtectionConfig(protection4, player) {
+  const data = protection4.getConfig();
+  const form = new ModalForm(
+    `Manage ${protection4.name} Protection Config`
+  ).addToggle("Enabled", data["enabled"]);
+  let keys = [];
+  for (const [key, value] of Object.entries(protection4.configDefault)) {
+    keys.push(key);
+    if (typeof value.defaultValue == "boolean") {
+      form.addToggle(value.description, data[key]);
+    } else if (typeof value.defaultValue == "number") {
+      form.addSlider(value.description, 0, 100, 1, data[key]);
+    } else {
+      form.addTextField(value.description, null, data[key]);
+    }
+  }
+  form.show(player, (ctx, enabled, ...keys2) => {
+    if (enabled != data["enabled"]) {
+      if (enabled)
+        protection4.enable();
+      if (!enabled)
+        protection4.disable();
+    }
+    let config = {
+      enabled
+    };
+    for (const [i, key] of Object.keys(protection4.configDefault).entries()) {
+      config[key] = keys2[i];
+    }
+    protection4.setConfig(config);
+    player.sendMessage(`Updated config for ${protection4.name}!`);
+  });
+}
+
+// src/modules/forms/home.ts
+function showHomeForm(player) {
+  new ActionForm("Rubedo Settings").addButton("Auto Mod", "textures/ui/permissions_op_crown.png", () => {
+    showAutoModHomeForm(player);
+  }).addButton("Banned items", "textures/blocks/sculk_shrieker_top.png", () => {
+    manageBannedItemsForm(player);
+  }).addButton("Banned blocks", "textures/blocks/barrier.png", () => {
+    manageBannedBlocksForm(player);
+  }).addButton("Enchantments", "textures/items/book_enchanted.png", () => {
+    manageEnchantmentLevelsForm(player);
+  }).addButton("Appeal Link", "textures/ui/Feedback.png", () => {
+    manageAppealLinkForm(player);
+  }).show(player);
+}
+
+// src/modules/commands/settings.ts
+new Command({
+  name: "settings",
+  description: "Opens up the settings menu for the player",
+  requires: (player) => ["admin", "moderator"].includes(getRole(player))
+}).executes((ctx) => {
+  showHomeForm(ctx.sender);
+  ctx.sender.sendMessage(`\xA7aForm request sent, close chat to continue!`);
+});
+
+// src/modules/commands/vanish.ts
+import { world as world8 } from "@minecraft/server";
+function vanish(player, say) {
+  if (player.hasTag(`spectator`)) {
+    player.runCommandAsync(`gamemode c`);
+    player.triggerEvent(`removeSpectator`);
+    player.removeTag(`spectator`);
+    if (!say)
+      return;
+    world8.sendMessage({
+      rawtext: [
+        {
+          translate: "multiplayer.player.joined",
+          with: [`\xA7e${player.name}`]
+        }
+      ]
+    });
+  } else {
+    player.runCommandAsync(`gamemode spectator`);
+    player.triggerEvent(`addSpectator`);
+    player.addTag(`spectator`);
+    if (!say)
+      return;
+    world8.sendMessage({
+      rawtext: [
+        {
+          translate: "multiplayer.player.left",
+          with: [`\xA7e${player.name}`]
+        }
+      ]
+    });
+  }
+}
+new Command({
+  name: "vanish",
+  description: "Toggles Vanish Mode on the sender",
+  requires: (player) => getRole(player) == "admin"
+}).executes((ctx) => {
+  vanish(ctx.sender, false);
+}).boolean("say").executes((ctx, say) => {
+  vanish(ctx.sender, say);
+});
+
+// src/config/app.ts
+var VERSION = "3.0.0-beta";
+
+// src/modules/commands/version.ts
+new Command({
+  name: "version",
+  description: "Get Current Rubedo Version",
+  aliases: ["v"]
+}).executes((ctx) => {
+  ctx.sender.sendMessage(`Current Rubedo Version: ${VERSION}`);
+});
+
+// src/modules/commands/kick.ts
+new Command({
+  name: "kick",
+  description: "Kicks a player from the game",
+  requires: (player) => getRole(player) == "admin"
+}).argument(new ArgumentTypes.player()).string("reason").executes((ctx, player, reason) => {
+  kick(player, [reason]);
+  ctx.sender.sendMessage(`\xA7aKicked ${player.name} from world`);
+});
+
+// src/modules/models/Log.ts
+var Log = class {
+  constructor(data) {
+    this.data = data;
+    console.warn(`[LOG]: ${data.message}`);
+    TABLES.logs.set(Date.now().toString(), data);
+  }
+};
+
+// src/modules/commands/log.ts
+var root7 = new Command({
+  name: "log",
+  description: "Manages the log command",
+  requires: (player) => getRole(player) == "admin"
+});
+root7.literal({
+  name: "add",
+  description: "Adds a new log"
+}).string("message").executes((ctx, message) => {
+  new Log({ message });
+  ctx.sender.sendMessage(`\xA7aAdded new log: ${message}`);
+});
+root7.literal({
+  name: "getAll",
+  description: "Gets all logs sorted in descending"
+}).int("page").array("order", ["ascending", "descending"]).executes((ctx, page, order) => {
+  const allLogs = Object.entries(TABLES.logs.collection()).sort(
+    (a, b) => order == "ascending" ? parseInt(b[0]) - parseInt(a[0]) : parseInt(a[0]) - parseInt(b[0])
+  );
+  if (allLogs.length == 0)
+    return ctx.sender.sendMessage(`\xA7cNo Logs have been made!`);
+  const maxPages = Math.ceil(allLogs.length / 8);
+  if (page > maxPages)
+    page = maxPages;
+  ctx.sender.sendMessage(
+    `\xA72--- Showing logs page ${page} of ${maxPages} (${PREFIX}log getAll <page: int>) ---`
+  );
+  for (const [key, value] of allLogs.slice(page * 8 - 8, page * 8)) {
+    ctx.sender.sendMessage(`${msToRelativeTime(parseInt(key))}: ${value.message}`);
+  }
+});
+root7.literal({
+  name: "getPlayersLogs",
+  description: "Gets all logs associated with a player"
+}).argument(new ArgumentTypes.playerName()).int("page").array("order", ["ascending", "descending"]).executes((ctx, playerName, page, order) => {
+  const allLogs = Object.entries(TABLES.logs.collection()).filter((v) => v[1].playerName == playerName).sort(
+    (a, b) => order == "ascending" ? parseInt(b[0]) - parseInt(a[0]) : parseInt(a[0]) - parseInt(b[0])
+  );
+  if (allLogs.length == 0)
+    return ctx.sender.sendMessage(`\xA7cNo Logs exists for "${playerName}"!`);
+  const maxPages = Math.ceil(allLogs.length / 8);
+  if (page > maxPages)
+    page = maxPages;
+  ctx.sender.sendMessage(
+    `\xA72--- Showing logs for "${playerName}" page ${page} of ${maxPages} ---`
+  );
+  for (const [key, value] of allLogs.slice(page * 8 - 8, page * 8)) {
+    ctx.sender.sendMessage(`${msToRelativeTime(parseInt(key))}: ${value.message}`);
+  }
+});
+root7.literal({
+  name: "getProtectionLogs",
+  description: "Gets all logs associated with a protection"
+}).string("protection").int("page").array("order", ["ascending", "descending"]).executes((ctx, protection4, page, order) => {
+  const allLogs = Object.entries(TABLES.logs.collection()).filter((v) => v[1].protection == protection4).sort(
+    (a, b) => order == "ascending" ? parseInt(b[0]) - parseInt(a[0]) : parseInt(a[0]) - parseInt(b[0])
+  );
+  if (allLogs.length == 0)
+    return ctx.sender.sendMessage(`\xA7cNo Logs exists for protection: "${protection4}"!`);
+  const maxPages = Math.ceil(allLogs.length / 8);
+  if (page > maxPages)
+    page = maxPages;
+  ctx.sender.sendMessage(
+    `\xA72--- Showing logs for Protection: "${protection4}" page ${page} of ${maxPages} ---`
+  );
+  for (const [key, value] of allLogs.slice(page * 8 - 8, page * 8)) {
+    ctx.sender.sendMessage(`${msToRelativeTime(parseInt(key))}: ${value.message}`);
+  }
+});
+root7.literal({
+  name: "clearAll",
+  description: "Clears all logs"
+}).executes((ctx) => {
+  TABLES.logs.clear();
+  ctx.sender.sendMessage(`\xA7aCleared All logs!`);
+});
+
+// src/modules/events/beforeDataDrivenEntityTriggerEvent.ts
+import { Player as Player7, world as world9 } from "@minecraft/server";
+var e = world9.beforeEvents.dataDrivenEntityTriggerEvent.subscribe((data) => {
+  if (!(data.entity instanceof Player7))
+    return;
+  if (data.id != "rubedo:becomeAdmin")
+    return;
+  data.entity.removeTag("CHECK_PACK");
+  const serverOwnerName = getServerOwnerName();
+  if (serverOwnerName) {
+    data.entity.playSound("note.bass");
+    data.entity.sendMessage(
+      `\xA7cFailed to give server owner: "${serverOwnerName}" is already owner!`
+    );
+    return world9.beforeEvents.dataDrivenEntityTriggerEvent.unsubscribe(e);
+  }
+  setRole(data.entity, "admin");
+  setServerOwner(data.entity);
+  data.entity.runCommandAsync(`camera @s fade time 1 1 1`);
+  data.entity.sendMessage(
+    `\xA7aYou have now been set as the "owner" of this server. The command "/function start" will not do anything anymore, type "-help" for more information!`
+  );
+});
+
+// src/modules/events/playerSpawn.ts
+import { world as world10 } from "@minecraft/server";
+world10.afterEvents.playerSpawn.subscribe(({ player }) => {
+  TABLES.ids.onLoad(() => {
+    if (isLockedDown() && getRole(player) != "admin")
+      return kick(player, text["lockdown.kick.message"]());
+    if (Mute.getMuteData(player))
+      player.runCommandAsync(`ability @s mute true`);
+    if (!TABLES.ids.has(player.name)) {
+      console.warn(`player is new`);
+      TABLES.ids.set(player.name, player.id);
+    }
+    const roleToSet = ChangePlayerRoleTask.getPlayersRoleToSet(player.name);
+    if (roleToSet)
+      setRole(player, roleToSet);
+  });
+});
+
+// src/modules/managers/ban.ts
+import { world as world11 } from "@minecraft/server";
+world11.afterEvents.playerSpawn.subscribe((data) => {
+  TABLES.ids.onLoad(() => {
+    const { player } = data;
+    const banData = TABLES.bans.get(player.id);
+    if (!banData)
+      return;
+    if (banData.expire && banData.expire < Date.now())
+      return TABLES.bans.delete(player.id);
+    kick(
+      player,
+      [
+        `\xA7cYou have been banned!`,
+        `\xA7aReason: \xA7f${banData.reason}`,
+        `\xA7fExpiry: \xA7b${banData.expire ? msToRelativeTime(banData.expire - Date.now()) : "Forever"}`,
+        `\xA7fAppeal at: \xA7b${getConfigId("appealLink")}`
+      ],
+      () => {
+        console.warn(new Error("Failed to kick player"));
+        TABLES.bans.delete(player.id);
+      }
+    );
+  });
+});
+
+// src/lib/Events/beforeChat.ts
+import { world as world12 } from "@minecraft/server";
+var CALLBACKS = {};
+world12.beforeEvents.chatSend.subscribe((data) => {
+  if (data.message.startsWith(PREFIX))
+    return;
+  for (const callback of Object.values(CALLBACKS)) {
+    callback.callback(data);
+  }
+});
+var beforeChat = class {
+  static subscribe(callback) {
+    const key = Date.now();
+    CALLBACKS[key] = { callback };
+    return key;
+  }
+  static unsubscribe(key) {
+    delete CALLBACKS[key];
+  }
+};
+
+// src/modules/managers/mute.ts
+beforeChat.subscribe((data) => {
+  const muteData = Mute.getMuteData(data.sender);
+  if (!muteData)
+    return;
+  if (muteData.expire && muteData.expire < Date.now())
+    return TABLES.mutes.delete(data.sender.name);
+  data.cancel = true;
+  data.sender.sendMessage(text["modules.managers.mute.isMuted"]());
+});
+
+// src/modules/managers/region.ts
+import { system as system5, world as world14 } from "@minecraft/server";
+
+// src/lib/Events/forEachPlayer.ts
+import { system as system4, world as world13 } from "@minecraft/server";
+var CALLBACKS2 = {};
+system4.runInterval(() => {
+  const players = [...world13.getPlayers()];
+  const playerEntires = players.entries();
+  for (const [i, player] of playerEntires) {
+    const callbacks = Object.values(CALLBACKS2);
+    for (const CALLBACK of callbacks) {
+      if (CALLBACK.delay != 0 && system4.currentTick - CALLBACK.lastCall < CALLBACK.delay)
+        continue;
+      CALLBACK.callback(player);
+      if (i == players.length - 1)
+        CALLBACK.lastCall = system4.currentTick;
+    }
+  }
+});
+var forEachPlayer = class {
+  static subscribe(callback, delay = 0) {
+    const key = Object.keys(CALLBACKS2).length;
+    CALLBACKS2[key] = { callback, delay, lastCall: 0 };
+    return key;
+  }
+  static unsubscribe(key) {
+    delete CALLBACKS2[key];
+  }
+};
+
+// src/modules/managers/region.ts
+system5.runTimeout(() => {
+  fillBlocksBetween("minecraft:deny" /* Deny */);
+}, 6e3);
+world14.beforeEvents.playerInteractWithBlock.subscribe((data) => {
+  if (["moderator", "admin"].includes(getRole(data.player)))
+    return;
+  if (data.player.isOp())
+    return;
+  const region = Region.vectorInRegion(
+    data.block.location,
+    data.block.dimension.id
+  );
+  if (!region)
+    return;
+  if (DOORS_SWITCHES.includes(data.block.typeId) && region.permissions.doorsAndSwitches)
+    return;
+  if (BLOCK_CONTAINERS.includes(data.block.typeId) && region.permissions.openContainers)
+    return;
+  data.cancel = true;
+});
+world14.beforeEvents.playerPlaceBlock.subscribe((data) => {
+  if (["moderator", "admin"].includes(getRole(data.player)))
+    return;
+  if (data.player.isOp())
+    return;
+  const region = Region.vectorInRegion(
+    data.block.location,
+    data.block.dimension.id
+  );
+  if (!region)
+    return;
+  data.cancel = true;
+  system5.run(() => {
+    data.player.playSound("note.bass");
+    data.player.sendMessage({
+      translate: "events.claimManager.interact.invalidPermission"
+    });
+  });
+});
+world14.beforeEvents.playerBreakBlock.subscribe((data) => {
+  if (["moderator", "admin"].includes(getRole(data.player)))
+    return;
+  if (data.player.isOp())
+    return;
+  const region = Region.vectorInRegion(
+    data.block.location,
+    data.block.dimension.id
+  );
+  if (!region)
+    return;
+  data.cancel = true;
+  system5.run(() => {
+    data.player.playSound("note.bass");
+    data.player.sendMessage({
+      translate: "events.claimManager.interact.invalidPermission"
+    });
+  });
+});
+world14.beforeEvents.explosion.subscribe((data) => {
+  const impactedBlocks = data.getImpactedBlocks();
+  const allowedBlocks = [];
+  for (const block of impactedBlocks) {
+    const region = Region.vectorInRegion(block.location, data.dimension.id);
+    if (region)
+      continue;
+    allowedBlocks.push(block);
+  }
+  data.setImpactedBlocks(allowedBlocks);
+});
+world14.afterEvents.entitySpawn.subscribe(async ({ entity }) => {
+  const region = Region.vectorInRegion(entity.location, entity.dimension.id);
+  if (!region)
+    return;
+  if (region.permissions.allowedEntities.includes(entity.typeId))
+    return;
+  entity.remove();
+});
+TABLES.regions.onLoad(() => {
+  system5.runInterval(async () => {
+    for (const region of Region.getAllRegions()) {
+      const entities = DIMENSIONS[region.dimensionId].getEntities({ excludeTypes: region.permissions.allowedEntities });
+      for (const entity of entities) {
+        if (!region.entityInRegion(entity))
+          continue;
+        entity.remove();
+      }
+    }
+  }, 100);
+  forEachPlayer.subscribe((player) => {
+    for (const region of Region.getAllRegions()) {
+      if (region.entityInRegion(player)) {
+        player.addTag(`inRegion`);
+        if (!region.permissions.pvp)
+          player.addTag(`region-protected`);
+      } else {
+        player.removeTag(`inRegion`);
+        player.removeTag(`region-protected`);
+      }
+    }
+  }, 5);
+});
+
+// src/modules/protections/gamemode.ts
+import { GameMode as GameMode2, world as world16 } from "@minecraft/server";
+
+// src/modules/models/Protection.ts
+import { system as system6, world as world15 } from "@minecraft/server";
+var Protection = class {
+  constructor(name, description, iconPath, isEnabledByDefault) {
+    this.name = name;
+    this.description = description;
+    this.iconPath = iconPath;
+    this.isEnabledByDefault = isEnabledByDefault;
+    this.name = name;
+    this.description = description;
+    this.iconPath = iconPath;
+    this.configDefault = {};
+    this.isEnabled = false;
+    this.isEnabledByDefault = isEnabledByDefault;
+    this.events = {};
+    this.schedules = [];
+    this.forEachPlayers = [];
+    PROTECTIONS[this.name] = this;
+  }
+  setConfigDefault(data) {
+    this.configDefault = data;
+    TABLES.protections.hasSync(this.name).then((v) => {
+      if (v)
+        return;
+      let saveData = {
+        enabled: true
+      };
+      for (const key of Object.keys(data)) {
+        saveData[key] = data[key].defaultValue;
+      }
+      TABLES.protections.set(this.name, saveData);
+    });
+    return this;
+  }
+  getConfig() {
+    let config = TABLES.protections.get(this.name);
+    if (!config)
+      config = { enabled: this.isEnabled };
+    return config;
+  }
+  async setConfig(data) {
+    return TABLES.protections.set(this.name, data);
+  }
+  triggerChange(enabled) {
+    if (enabled) {
+      this.isEnabled = true;
+      this.onEnableCallback?.();
+      for (const [key, value] of Object.entries(this.events)) {
+        if (value.triggered)
+          continue;
+        let callback = world15.beforeEvents[key].subscribe(
+          value.callback
+        );
+        value.triggered = true;
+        value.callback = callback;
+      }
+      for (const v of this.forEachPlayers) {
+        if (v.key)
+          continue;
+        let key = forEachPlayer.subscribe(v.callback, v.delay);
+        v.key = key;
+      }
+      for (const v of this.schedules) {
+        if (v.runScheduleId)
+          continue;
+        let runScheduleId = system6.runInterval(v.callback);
+        v.runScheduleId = runScheduleId;
+      }
+    } else {
+      this.isEnabled = false;
+      this.onDisableCallback?.();
+      for (const [key, value] of Object.entries(this.events)) {
+        if (!value.triggered)
+          continue;
+        world15.events[key].unsubscribe(value.callback);
+        value.triggered = false;
+      }
+      for (const v of this.forEachPlayers) {
+        if (!v.key)
+          continue;
+        forEachPlayer.unsubscribe(v.key);
+        v.key = null;
+      }
+      for (const v of this.schedules) {
+        if (!v.runScheduleId)
+          continue;
+        system6.clearRun(v.runScheduleId);
+        v.runScheduleId = null;
+      }
+    }
+  }
+  onEnable(callback) {
+    this.onEnableCallback = callback;
+    return this;
+  }
+  onDisable(callback) {
+    this.onDisableCallback = callback;
+    return this;
+  }
+  subscribe(id, callback) {
+    this.events[id] = {
+      callback,
+      triggered: false
+    };
+    return this;
+  }
+  runSchedule(callback, tickInterval) {
+    this.schedules.push({
+      callback,
+      tickInterval,
+      runScheduleId: null
+    });
+    return this;
+  }
+  forEachPlayer(callback, delay = 0) {
+    this.forEachPlayers.push({
+      callback,
+      delay,
+      key: null
+    });
+    return this;
+  }
+  enable() {
+    this.triggerChange(true);
+  }
+  disable() {
+    this.triggerChange(false);
+  }
+};
+
+// src/modules/protections/gamemode.ts
+var ILLEGAL_GAMEMODE = GameMode2.creative;
+var ViolationCount = new PlayerLog();
+var protection = new Protection(
+  "gamemode",
+  "Blocks illegal gamemode",
+  "textures/ui/creative_icon.png",
+  true
+).setConfigDefault({
+  clearPlayer: {
+    description: "Whether to clear players inventory.",
+    defaultValue: true
+  },
+  setToSurvival: {
+    description: "If player should be set to survival after being flagged.",
+    defaultValue: true
+  },
+  banPlayer: {
+    description: "If player should be banned after violation count is met.",
+    defaultValue: false
+  },
+  violationCount: {
+    description: "The amount of violations before ban.",
+    defaultValue: 0
+  }
+});
+protection.runSchedule(() => {
+  const config = protection.getConfig();
+  const players = world16.getPlayers({ gameMode: ILLEGAL_GAMEMODE });
+  for (const player of players) {
+    if (["moderator", "admin", "builder"].includes(getRole(player)))
+      continue;
+    try {
+      if (config.setToSurvival)
+        player.runCommandAsync(`gamemode s`);
+      if (config.clearPlayer)
+        player.runCommandAsync(`clear @s`);
+    } catch (error) {
+    }
+    new Log({
+      playerName: player.name,
+      protection: "Gamemode",
+      message: `${player.name} has entered into a illegal gamemode!`
+    });
+    const count = (ViolationCount.get(player) ?? 0) + 1;
+    ViolationCount.set(player, count);
+    if (config.banPlayer && count >= config.violationCount)
+      new Ban(player, null, "Illegal Gamemode");
+  }
+}, 20);
+
+// src/modules/protections/nuker.ts
+import { world as world17 } from "@minecraft/server";
+var log = new PlayerLog();
+var IMPOSSIBLE_BREAK_TIME = 15;
+var VALID_BLOCK_TAGS = [
+  "snow",
+  "lush_plants_replaceable",
+  "azalea_log_replaceable",
+  "minecraft:crop",
+  "fertilize_area",
+  "plant"
+];
+var IMPOSSIBLE_BREAKS = [
+  "minecraft:water",
+  "minecraft:flowing_water",
+  "minecraft:lava",
+  "minecraft:flowing_lava",
+  "minecraft:bedrock"
+];
+var ViolationCount2 = new PlayerLog();
+var beforeBlockBreakKey;
+var protection2 = new Protection(
+  "nuker",
+  "Blocks block breaking too fast",
+  "textures/blocks/dirt.png",
+  true
+).setConfigDefault({
+  banPlayer: {
+    description: "If the player should be banned once violation count is met",
+    defaultValue: false
+  },
+  violationCount: {
+    description: "Violations before ban",
+    defaultValue: 0
+  }
+});
+protection2.onEnable(() => {
+  const config = protection2.getConfig();
+  beforeBlockBreakKey = world17.beforeEvents.playerBreakBlock.subscribe((data) => {
+    if (["moderator", "admin"].includes(getRole(data.player)))
+      return;
+    if (data.block.getTags().some((tag) => VALID_BLOCK_TAGS.includes(tag)))
+      return;
+    const old = log.get(data.player);
+    log.set(data.player, Date.now());
+    if (!old)
+      return;
+    if (!IMPOSSIBLE_BREAKS.includes(data.block.typeId)) {
+      if (old < Date.now() - IMPOSSIBLE_BREAK_TIME)
+        return;
+      const count = (ViolationCount2.get(data.player) ?? 0) + 1;
+      ViolationCount2.set(data.player, count);
+      if (config.banPlayer && count >= config.violationCount)
+        new Ban(data.player, null, "Using Nuker");
+    }
+    data.cancel = true;
+  });
+}).onDisable(() => {
+  world17.beforeEvents.playerBreakBlock.unsubscribe(beforeBlockBreakKey);
+});
+
+// src/modules/protections/spam.ts
+var previousMessage = new PlayerLog();
+var ViolationCount3 = new PlayerLog();
+var protection3 = new Protection(
+  "spam",
+  "Blocks spam in chat",
+  "textures/ui/mute_on.png",
+  false
+).setConfigDefault({
+  permMutePlayer: {
+    description: "If player should be permanently muted once violation count is met.",
+    defaultValue: false
+  },
+  violationCount: {
+    description: "Violation count before permanent mute",
+    defaultValue: 0
+  },
+  repeatedMessages: {
+    description: "Blocks repeated messages",
+    defaultValue: true
+  },
+  zalgo: {
+    description: "Blocks zalgo",
+    defaultValue: true
+  }
+});
+protection3.subscribe("chatSend", (data) => {
+  try {
+    if (data.message.startsWith(PREFIX))
+      return;
+    if (["admin", "moderator"].includes(getRole(data.sender)))
+      return;
+    const config = protection3.getConfig();
+    const isSpam = () => {
+      const count = (ViolationCount3.get(data.sender) ?? 0) + 1;
+      ViolationCount3.set(data.sender, count);
+      if (config.permMutePlayer && count >= config.violationCount)
+        new Mute(data.sender, null, "Spamming");
+    };
+    if (config.repeatedMessages && previousMessage.get(data.sender) == data.message) {
+      data.cancel = true;
+      isSpam();
+      return data.sender.sendMessage(`\xA7cRepeated message detected!`);
+    }
+    if (config.zalgo && /%CC%/g.test(encodeURIComponent(data.message))) {
+      data.cancel = true;
+      isSpam();
+      return data.sender.sendMessage(
+        `\xA7cYou message contains some type of zalgo and cannot be sent!`
+      );
+    }
+    previousMessage.set(data.sender, data.message);
+  } catch (error) {
+    console.warn(error + error.stack);
+  }
+});
+
+// src/index.ts
+var database = new DynamicProperty(
+  "db",
+  "object"
+).setWorldDynamic(true);
+system7.beforeEvents.watchdogTerminate.subscribe((data) => {
+  data.cancel = true;
+  console.warn(`WATCHDOG TRIED TO CRASH = ${data.terminateReason}`);
+});
+var NPC_LOCATIONS = [];
+function clearNpcLocations() {
+  NPC_LOCATIONS = [];
+}
+export {
+  NPC_LOCATIONS,
+  clearNpcLocations,
+  database
+};
