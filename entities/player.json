@@ -5,47 +5,9 @@
       "identifier": "minecraft:player",
       "is_spawnable": true,
       "is_summonable": true,
-      "is_experimental": false,
-      "animations": {
-        "digging": "controller.animation.digging",
-        "eating": "controller.animation.eating",
-        "gliding": "controller.animation.gliding",
-        "ground": "controller.animation.ground",
-        "jumping": "controller.animation.jumping",
-        "levitating": "controller.animation.levitating",
-        "moving": "controller.animation.moving",
-        "riding": "controller.animation.riding",
-        "swimming": "controller.animation.swimming",
-        "using_item": "controller.animation.using_item",
-        "sneaking": "controller.animation.sneaking"
-      },
-      "scripts": {
-        "animate": [
-          "digging",
-          "eating",
-          "gliding",
-          "ground",
-          "jumping",
-          "levitating",
-          "moving",
-          "riding",
-          "swimming",
-          "using_item",
-          "sneaking"
-        ]
-      }
+      "is_experimental": false
     },
     "component_groups": {
-      "has_container_open": {
-        "minecraft:mark_variant": {
-          "value": 1
-        }
-      },
-      "dosent_have_container_open": {
-        "minecraft:mark_variant": {
-          "value": 2
-        }
-      },
       "kick": {
         "minecraft:explode": {
           "breaks_blocks": false,
@@ -195,19 +157,6 @@
       "minecraft:insomnia": {
         "days_until_insomnia": 3
       },
-      "minecraft:rideable": {
-        "seat_count": 1,
-        "family_types": ["rubedoInventory"],
-        "rider_can_interact": true,
-        "seats": [
-          {
-            "position": [0, -0.3, 0],
-            "min_rider_count": 0,
-            "max_rider_count": 1,
-            "lock_rider_rotation": 0
-          }
-        ]
-      },
       "minecraft:conditional_bandwidth_optimization": {},
       "minecraft:block_climber": {},
       "minecraft:environment_sensor": {
@@ -228,52 +177,12 @@
               ]
             },
             "event": "minecraft:trigger_raid"
-          },
-          {
-            "filters": {
-              "all_of": [
-                {
-                  "test": "has_container_open"
-                }
-              ]
-            },
-            "event": "rubedo:has_container_open"
-          },
-          {
-            "filters": {
-              "none_of": [
-                {
-                  "test": "has_container_open"
-                }
-              ]
-            },
-            "event": "rubedo:dosent_have_container_open"
           }
         ]
-      },
-      "minecraft:on_death": {
-        "event": "on_death"
       }
     },
     "events": {
       "rubedo:becomeAdmin": {},
-      "rubedo:has_container_open": {
-        "add": {
-          "component_groups": ["has_container_open"]
-        },
-        "remove": {
-          "component_groups": ["dosent_have_container_open"]
-        }
-      },
-      "rubedo:dosent_have_container_open": {
-        "add": {
-          "component_groups": ["dosent_have_container_open"]
-        },
-        "remove": {
-          "component_groups": ["has_container_open"]
-        }
-      },
-      "on_death": {},
       "kick": {
         "add": {
           "component_groups": ["kick"]
