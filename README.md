@@ -463,6 +463,8 @@ Once you run:
 -settings
 ```
 
+![automod screen](/public/automodScreen.PNG)
+
 in chat you will be prompted to close your chat screen. Once you do so a form should be prompted up
 on your screen. In this screen you can edit things like AutoMod, Banned Items, Banned Blocks, Enchantments, And the Appeal Link!
 
