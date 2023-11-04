@@ -1,7 +1,7 @@
 import { Player, world } from "@minecraft/server";
 import { getServerOwnerName, setRole, setServerOwner } from "../../utils";
 
-let e = world.beforeEvents.dataDrivenEntityTriggerEvent.subscribe((data) => {
+let e = world.afterEvents.dataDrivenEntityTriggerEvent.subscribe((data) => {
   if (!(data.entity instanceof Player)) return;
   if (data.id != "rubedo:becomeAdmin") return;
   // Rubedo is now verified to be at the top
