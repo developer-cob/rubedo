@@ -5,6 +5,7 @@ import { confirmAction } from "../../lib/Form/utils.js";
 import { TABLES } from "../../tables.js";
 import { getRole, msToRelativeTime } from "../../utils.js";
 import { Ban } from "../models/Ban.js";
+import { Log } from "../models/Log.js";
 
 function ban(
   ctx: CommandCallback,
@@ -65,6 +66,10 @@ root
     if (!banData) return ctx.sender.sendMessage(`${playerName} is not banned`);
     if (TABLES.bans.delete(banData.key)) {
       ctx.sender.sendMessage(`§a${playerName}§r has been Unbanned!`);
+      new Log ({
+        message: `${playerName} was Un-Banned by ${ctx.sender}.`,
+        playerName: playerName,
+      });
     } else {
       ctx.sender.sendMessage(`§cFailed to un-ban ${playerName}`);
     }

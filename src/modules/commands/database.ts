@@ -1,6 +1,7 @@
 import { Command } from "../../lib/Command/Command";
 import { confirmAction } from "../../lib/Form/utils";
 import { TABLES } from "../../tables";
+import { Log } from "../models/Log";
 
 const root = new Command({
   name: "database",
@@ -26,13 +27,17 @@ root
     requires: (player) => player.isOp(),
   })
   .executes((ctx) => {
-    ctx.sender.sendMessage(`§aClose chat to confirm Reset of database.`)
+    ctx.sender.sendMessage(`§aClose chat to confirm Reset of database.`);
     confirmAction(
       ctx.sender,
       "Are you sure you want to reset all Database Data! This cannot be undone.",
       () => {
         Object.values(TABLES).forEach((t) => t.clear());
         ctx.sender.sendMessage("Reset All Database data!");
+        new Log({
+          message: `${ctx.sender.name}'s Reset all Database data!`,
+          playerName: ctx.sender.name,
+        });
       }
     );
   });
@@ -51,6 +56,10 @@ root
       () => {
         TABLES[table as keyof typeof TABLES].clear();
         ctx.sender.sendMessage("Reset All Database data!");
+        new Log({
+          message: `${ctx.sender.name}'s Reset all Database data on table: ${table}`,
+          playerName: ctx.sender.name,
+        });
       }
     );
   });

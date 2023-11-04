@@ -1,6 +1,7 @@
 import { world } from "@minecraft/server";
 import { TABLES } from "../../tables.js";
 import { kick, getConfigId, msToRelativeTime } from "../../utils.js";
+import { Log } from "../models/Log.js";
 
 world.afterEvents.playerSpawn.subscribe((data) => {
   TABLES.ids.onLoad(() => {
@@ -26,5 +27,9 @@ world.afterEvents.playerSpawn.subscribe((data) => {
         TABLES.bans.delete(player.id);
       }
     );
+    new Log({
+      message: `Banned Player: ${player.name} tried to join the world during his ban duration.`,
+      playerName: player.name,
+    });
   });
 });

@@ -4,6 +4,7 @@ import { APPEAL_LINK } from "../../config/moderation";
 import { ModalForm } from "../../lib/Form/Models/ModelForm";
 import { ActionForm } from "../../lib/Form/Models/ActionForm";
 import { ENCHANTMENTS } from "../../config/enchantments";
+import { Log } from "../models/Log";
 
 export function manageBannedItemsForm(player: Player) {
   new ActionForm("Manage Banned Items")
@@ -23,6 +24,10 @@ export function removeBannedItemForm(player: Player) {
       items = items.filter((p) => p != item);
       setConfigId("banned_items", items);
       player.sendMessage(`Removed Banned item "${item}"`);
+      new Log({
+        message: `${player.name} unbanned the item: ${item}.`,
+        playerName: player.name,
+      });
     });
 }
 
@@ -36,6 +41,10 @@ export function addBannedItemForm(player: Player) {
       items.push(item);
       setConfigId("banned_items", items);
       player.sendMessage(`Banned the item "${item}"`);
+      new Log({
+        message: `${player.name} banned the item: ${item}.`,
+        playerName: player.name,
+      });
     });
 }
 
@@ -58,6 +67,10 @@ export function removeBannedBlockForm(player: Player) {
       blocks = blocks.filter((p) => p != block);
       setConfigId("banned_blocks", blocks);
       player.sendMessage(`Removed Banned block "${block}"`);
+      new Log({
+        message: `${player.name} unbanned the block: ${block}.`,
+        playerName: player.name,
+      });
     });
 }
 
@@ -71,6 +84,10 @@ export function addBannedBlockForm(player: Player) {
       blocks.push(block);
       setConfigId("banned_blocks", blocks);
       player.sendMessage(`Banned the block "${block}"`);
+      new Log({
+        message: `${player.name} banned the block: ${block}.`,
+        playerName: player.name,
+      });
     });
 }
 
@@ -88,6 +105,10 @@ export function manageEnchantmentLevelsForm(player: Player) {
       enchants[enchantment as keyof typeof ENCHANTMENTS] = level;
       setConfigId("enchantments", enchants);
       player.sendMessage(`Set max level for ${enchantment} to ${level}`);
+      new Log({
+        message: `${player.name} set max enchant level for ${enchantment} to ${level}.`,
+        playerName: player.name,
+      });
     });
 }
 
@@ -97,5 +118,9 @@ export function manageAppealLinkForm(player: Player) {
     .show(player, (ctx, link) => {
       setConfigId("appealLink", link);
       player.sendMessage(`Changed the servers appeal link to ${link}`);
+      new Log({
+        message: `${player.name} changed server appeal link to: ${link}.`,
+        playerName: player.name,
+      });
     });
 }

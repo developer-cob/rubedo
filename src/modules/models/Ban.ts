@@ -1,7 +1,8 @@
 import { Player } from "@minecraft/server";
 import { TABLES } from "../../tables.js";
 import type { IBanData } from "../../types.js";
-import { durationToMs } from "../../utils.js";
+import { durationToMs, msToRelativeTime } from "../../utils.js";
+import { Log } from "./Log.js";
 
 function setBan(
   player: string | Player,
@@ -10,9 +11,10 @@ function setBan(
   reason: string = "No Reason",
   by: string = "Rubedo Auto Mod"
 ) {
+  const playerName = player instanceof Player ? player.name : player;
   const data: IBanData = {
     key: id,
-    playerName: player instanceof Player ? player.name : player,
+    playerName: playerName,
     date: Date.now(),
     duration: duration ? durationToMs(duration) : null,
     expire: duration ? durationToMs(duration) + Date.now() : null,
@@ -20,6 +22,12 @@ function setBan(
     by: by,
   };
   TABLES.bans.set(id, data);
+  new Log({
+    message: `${playerName}'s Ban was set by: ${
+      data.by
+    }, to expire: ${msToRelativeTime(data.expire)}, because: ${data.reason}.`,
+    playerName: playerName,
+  });
 }
 
 export class Ban {

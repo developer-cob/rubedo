@@ -1,5 +1,6 @@
 import { ArgumentTypes, Command } from "../../lib/Command/Command.js";
 import { getRole } from "../../utils.js";
+import { Log } from "../models/Log.js";
 
 new Command({
   name: "ecwipe",
@@ -12,4 +13,8 @@ new Command({
       player.runCommandAsync(`replaceitem entity @s slot.enderchest ${i} air`);
     }
     ctx.sender.sendMessage(`§aCleared "${player.name}"'s Ender chest!`);
+    new Log({
+      message: `${ctx.sender.name}'s wiped ${player.name}'s Ender Chest!`,
+      playerName: player.name,
+    });
   });

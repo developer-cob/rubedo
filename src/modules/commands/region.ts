@@ -1,6 +1,7 @@
 import { Region } from "../models/Region.js";
 import { getRole } from "../../utils.js";
 import { Command } from "../../lib/Command/Command.js";
+import { Log } from "../models/Log.js";
 
 const command = new Command({
   name: "region",
@@ -26,6 +27,10 @@ command
     ctx.sender.sendMessage(
       `Created Region From ${from_x} -64 ${from_z} ${to_x} 320 ${to_z}`
     );
+    new Log({
+      message: `${ctx.sender.name}'s Created a new Region from [(${from_x}, ${to_x}), (${to_x}, ${to_z})] in dimension: ${ctx.sender.dimension.id}.`,
+      playerName: ctx.sender.name,
+    });
   });
 
 command
@@ -42,6 +47,12 @@ command
       ctx.sender.sendMessage(
         `Removed Region at ${JSON.stringify(ctx.sender.location)}`
       );
+      new Log({
+        message: `${ctx.sender.name}'s Removed a Region at ${JSON.stringify(
+          ctx.sender.location
+        )} in dimension: ${ctx.sender.dimension.id}.`,
+        playerName: ctx.sender.name,
+      });
     } else {
       ctx.sender.sendMessage(
         `Failed to find/remove region at ${JSON.stringify(ctx.sender.location)}`

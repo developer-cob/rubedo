@@ -3,6 +3,7 @@ import { PlayerLog } from "../../database/PlayerLog.js";
 import { getRole } from "../../utils.js";
 import { Ban } from "../models/Ban.js";
 import { Protection } from "../models/Protection.js";
+import { Log } from "../models/Log.js";
 
 /**
  * The log of the players break times
@@ -27,7 +28,7 @@ export const VALID_BLOCK_TAGS = [
   "azalea_log_replaceable",
   "minecraft:crop",
   "fertilize_area",
-  "plant"
+  "plant",
 ];
 
 /**
@@ -70,24 +71,30 @@ const protection = new Protection<{
 protection
   .onEnable(() => {
     const config = protection.getConfig();
-    beforeBlockBreakKey = world.beforeEvents.playerBreakBlock.subscribe((data) => {
-      if (["moderator", "admin"].includes(getRole(data.player))) return;
-      if (data.block.getTags().some((tag) => VALID_BLOCK_TAGS.includes(tag)))
-        return;
-      const old = log.get(data.player);
-      log.set(data.player, Date.now());
-      if (!old) return;
+    beforeBlockBreakKey = world.beforeEvents.playerBreakBlock.subscribe(
+      (data) => {
+        if (["moderator", "admin"].includes(getRole(data.player))) return;
+        if (data.block.getTags().some((tag) => VALID_BLOCK_TAGS.includes(tag)))
+          return;
+        const old = log.get(data.player);
+        log.set(data.player, Date.now());
+        if (!old) return;
 
-      // If block is impossible to break skip check, reduces lag.
-      if (!IMPOSSIBLE_BREAKS.includes(data.block.typeId)) {
-        if (old < Date.now() - IMPOSSIBLE_BREAK_TIME) return;
-        const count = (ViolationCount.get(data.player) ?? 0) + 1;
-        ViolationCount.set(data.player, count);
-        if (config.banPlayer && count >= config.violationCount)
-          new Ban(data.player, null, "Using Nuker");
+        // If block is impossible to break skip check, reduces lag.
+        if (!IMPOSSIBLE_BREAKS.includes(data.block.typeId)) {
+          if (old < Date.now() - IMPOSSIBLE_BREAK_TIME) return;
+          const count = (ViolationCount.get(data.player) ?? 0) + 1;
+          ViolationCount.set(data.player, count);
+          new Log({
+            message: `${data.player.name} has a updated nuker violation count of: ${count}.`,
+            playerName: data.player.name,
+          });
+          if (config.banPlayer && count >= config.violationCount)
+            new Ban(data.player, null, "Using Nuker");
+        }
+        data.cancel = true;
       }
-      data.cancel = true;
-    });
+    );
   })
   .onDisable(() => {
     world.beforeEvents.playerBreakBlock.unsubscribe(beforeBlockBreakKey);

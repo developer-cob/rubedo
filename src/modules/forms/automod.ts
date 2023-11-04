@@ -5,6 +5,7 @@ import { Protection } from "../models/Protection";
 import { showHomeForm } from "./home";
 import { ActionForm } from "../../lib/Form/Models/ActionForm";
 import { ModalForm } from "../../lib/Form/Models/ModelForm";
+import { Log } from "../models/Log";
 
 export function showAutoModHomeForm(player: Player) {
   const form = new ActionForm("Manage Protections");
@@ -50,5 +51,9 @@ export function showProtectionConfig(protection: Protection, player: Player) {
     }
     protection.setConfig(config);
     player.sendMessage(`Updated config for ${protection.name}!`);
+    new Log({
+      message: `${player.name} updated config for protection: ${protection.name}.`,
+      playerName: player.name,
+    });
   });
 }

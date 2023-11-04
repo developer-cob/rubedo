@@ -1,5 +1,6 @@
 import { ArgumentTypes, Command } from "../../lib/Command/Command";
 import { getRole, kick } from "../../utils";
+import { Log } from "../models/Log";
 
 new Command({
   name: "kick",
@@ -10,5 +11,9 @@ new Command({
   .string("reason")
   .executes((ctx, player, reason) => {
     kick(player, [reason]);
-    ctx.sender.sendMessage(`§aKicked ${player.name} from world`);
+    ctx.sender.sendMessage(`§aKicked ${player.name} from the world`);
+    new Log({
+      message: `${ctx.sender.name}'s Kicked: ${player.name} from the world. Because: ${reason}.`,
+      playerName: player.name,
+    });
   });

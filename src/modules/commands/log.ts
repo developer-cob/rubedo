@@ -34,7 +34,8 @@ root
         ? parseInt(b[0]) - parseInt(a[0])
         : parseInt(a[0]) - parseInt(b[0])
     );
-    if (allLogs.length == 0) return ctx.sender.sendMessage(`§cNo Logs have been made!`);
+    if (allLogs.length == 0)
+      return ctx.sender.sendMessage(`§cNo Logs have been made!`);
     const maxPages = Math.ceil(allLogs.length / 8);
     if (page > maxPages) page = maxPages;
     ctx.sender.sendMessage(
@@ -42,7 +43,9 @@ root
     );
 
     for (const [key, value] of allLogs.slice(page * 8 - 8, page * 8)) {
-      ctx.sender.sendMessage(`${msToRelativeTime(parseInt(key))}: ${value.message}`);
+      ctx.sender.sendMessage(
+        `${msToRelativeTime(parseInt(key))}: ${value.message}`
+      );
     }
   });
 
@@ -71,7 +74,9 @@ root
     );
 
     for (const [key, value] of allLogs.slice(page * 8 - 8, page * 8)) {
-      ctx.sender.sendMessage(`${msToRelativeTime(parseInt(key))}: ${value.message}`);
+      ctx.sender.sendMessage(
+        `${msToRelativeTime(parseInt(key))}: ${value.message}`
+      );
     }
   });
 
@@ -92,7 +97,9 @@ root
           : parseInt(a[0]) - parseInt(b[0])
       );
     if (allLogs.length == 0)
-      return ctx.sender.sendMessage(`§cNo Logs exists for protection: "${protection}"!`);
+      return ctx.sender.sendMessage(
+        `§cNo Logs exists for protection: "${protection}"!`
+      );
     const maxPages = Math.ceil(allLogs.length / 8);
     if (page > maxPages) page = maxPages;
     ctx.sender.sendMessage(
@@ -100,7 +107,9 @@ root
     );
 
     for (const [key, value] of allLogs.slice(page * 8 - 8, page * 8)) {
-      ctx.sender.sendMessage(`${msToRelativeTime(parseInt(key))}: ${value.message}`);
+      ctx.sender.sendMessage(
+        `${msToRelativeTime(parseInt(key))}: ${value.message}`
+      );
     }
   });
 
@@ -112,4 +121,8 @@ root
   .executes((ctx) => {
     TABLES.logs.clear();
     ctx.sender.sendMessage(`§aCleared All logs!`);
+    new Log({
+      message: `${ctx.sender.name}'s Cleared all server logs.`,
+      playerName: ctx.sender.name,
+    });
   });

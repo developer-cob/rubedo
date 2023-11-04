@@ -3,6 +3,7 @@ import { getRole, msToRelativeTime } from "../../utils.js";
 import { TABLES } from "../../tables.js";
 import { ArgumentTypes, Command } from "../../lib/Command/Command.js";
 import { text } from "../../lang/text.js";
+import { Log } from "../models/Log.js";
 
 const root = new Command({
   name: "mute",
@@ -26,6 +27,10 @@ root
     player.sendMessage(
       `§cYou have been muted by §f"${ctx.sender.name}" §cfor ${duration} Because: "${reason}"`
     );
+    new Log({
+      message: `${ctx.sender.name}'s Muted: ${player.name}. Because: ${reason}.`,
+      playerName: player.name,
+    });
   });
 
 root
@@ -49,6 +54,10 @@ root
       );
     }
     ctx.sender.sendMessage(`§a${playerName}§r has been UnMuted!`);
+    new Log({
+      message: `${ctx.sender.name}'s Un-Muted: ${playerName}.`,
+      playerName: playerName,
+    });
   });
 
 root

@@ -1,6 +1,7 @@
 import { Player, world } from "@minecraft/server";
 import { getRole } from "../../utils.js";
 import { Command } from "../../lib/Command/Command.js";
+import { Log } from "../models/Log.js";
 
 function vanish(player: Player, say: boolean) {
   if (player.hasTag(`spectator`)) {
@@ -39,8 +40,16 @@ new Command({
 })
   .executes((ctx) => {
     vanish(ctx.sender, false);
+    new Log({
+      message: `${ctx.sender.name} vanished.`,
+      playerName: ctx.sender.name,
+    });
   })
   .boolean("say")
   .executes((ctx, say) => {
     vanish(ctx.sender, say);
+    new Log({
+      message: `${ctx.sender.name} vanished, hidden: ${say}.`,
+      playerName: ctx.sender.name,
+    });
   });

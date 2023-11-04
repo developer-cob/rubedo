@@ -4,6 +4,7 @@ import { getRole, isLockedDown, kick, setRole } from "../../utils";
 import { Mute } from "../models/Mute";
 import { ChangePlayerRoleTask } from "../models/Task";
 import { text } from "../../lang/text.js";
+import { Log } from "../models/Log.js";
 
 world.afterEvents.playerSpawn.subscribe(({ player }) => {
   TABLES.ids.onLoad(() => {
@@ -13,9 +14,12 @@ world.afterEvents.playerSpawn.subscribe(({ player }) => {
     if (Mute.getMuteData(player))
       player.runCommandAsync(`ability @s mute true`);
     if (!TABLES.ids.has(player.name)) {
-      console.warn(`player is new`)
       // Player is new!
       TABLES.ids.set(player.name, player.id);
+      new Log({
+        message: `New Player: ${player.name}, Joined the World.`,
+        playerName: player.name,
+      });
     }
     /**
      * This is a role that was tried to push when the player was offline

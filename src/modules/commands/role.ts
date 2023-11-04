@@ -9,6 +9,7 @@ import { TABLES } from "../../tables.js";
 import { ROLES } from "../../types";
 import { ArgumentTypes, Command } from "../../lib/Command/Command.js";
 import { confirmAction } from "../../lib/Form/utils.js";
+import { Log } from "../models/Log.js";
 
 // Helper
 const StringIsNumber = (value: any) => isNaN(Number(value)) === false;
@@ -39,6 +40,10 @@ root
   .executes((ctx, playerName, role) => {
     setRole(playerName, role as keyof typeof ROLES);
     ctx.sender.sendMessage(`Changed role of ${playerName} to ${role}`);
+    new Log({
+      message: `${ctx.sender.name} Updated ${playerName}'s role to: ${role}.`,
+      playerName: playerName,
+    });
   });
 
 root
@@ -85,6 +90,10 @@ ownerRoot
         ctx.sender.sendMessage(
           `§aSet the server Owner to: ${player.name} (id: ${player.id})`
         );
+        new Log({
+          message: `${ctx.sender.name} Transferred server ownership to ${player.name}.`,
+          playerName: player.name,
+        });
       }
     );
     ctx.sender.sendMessage(`§aClose chat to confirm`);
@@ -105,6 +114,10 @@ ownerRoot
         ctx.sender.sendMessage(
           `§aCleared the server owner! run "/reload" or reload world to run "/function start" again!`
         );
+        new Log({
+          message: `${ctx.sender.name} Cleared the servers ownership.`,
+          playerName: ctx.sender.name,
+        });
       }
     );
     ctx.sender.sendMessage(`§aClose chat to confirm`);
