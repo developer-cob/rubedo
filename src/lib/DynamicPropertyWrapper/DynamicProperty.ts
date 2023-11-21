@@ -100,42 +100,50 @@ export class DynamicProperty<T extends any | Vector3> {
    * @throws if no entity is specified and this is not world dynamic
    * @throws if entity is specified and the entity is not a valid entity type on this
    */
-  set(value: T, entity?: Entity) {
-    let parsedValue = this.compile(value);
+  set(value: T | undefined, entity?: Entity) {
+    let parsedValue = value ? this.compile(value) : undefined;
     if (entity) {
       const typeId = entity.typeId; // Reduces Entity.typeId calls.
       if (!this.entityTypes.find((t) => t.id == typeId))
         throw new Error(
           `${entity.id} Is not a registered entity type for ${this.identifier}!`
         );
-      entity.setDynamicProperty(this.identifier, parsedValue);
+      if (!entity.isValid())
+        throw new Error(
+          `Failed to set Dynamic Property on: ${entity.id}, Entity is not Valid`
+        );
+      try {
+        entity.setDynamicProperty(this.identifier, parsedValue);
+      } catch (error) {
+        console.warn(
+          `[Dynamic Property Wrapper] Failed to set ${this.identifier} on: ${
+            entity.id
+          }, ${error + error.stack}`
+        );
+      }
     } else {
       if (!this.isWorldDynamic)
         throw new Error(`${this.identifier} Is not World Dynamic!`);
-      world.setDynamicProperty(this.identifier, parsedValue);
+      try {
+        world.setDynamicProperty(this.identifier, parsedValue);
+      } catch (error) {
+        console.warn(
+          `[Dynamic Property Wrapper] Failed to set Dynamic Property on: World, ${
+            error + error.stack
+          }`
+        );
+      }
     }
   }
 
   /**
    * Removes this dynamic property on entity or world
-   * @param value value to set to
    * @param entity if entity is specified it will set it on a entity
    * @throws if no entity is specified and this is not world dynamic
    * @throws if entity is specified and the entity is not a valid entity type on this
    * @returns if it has successfully removed the dynamic property
    */
   remove(entity?: Entity) {
-    if (entity) {
-      const typeId = entity.typeId; // Reduces Entity.typeId calls.
-      if (!this.entityTypes.find((t) => t.id == typeId))
-        throw new Error(
-          `${entity.id} Is not a registered entity type for ${this.identifier}!`
-        );
-      return entity.setDynamicProperty(this.identifier, undefined);
-    } else {
-      if (!this.isWorldDynamic)
-        throw new Error(`${this.identifier} Is not World Dynamic!`);
-      return world.setDynamicProperty(this.identifier, undefined);
-    }
+    this.set(undefined, entity);
   }
 }
