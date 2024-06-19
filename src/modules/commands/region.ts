@@ -106,6 +106,9 @@ permission
     );
     if (!region) return ctx.sender.sendMessage(`You are not in a region`);
     region.changePermission(key, value);
+    if (key === "pvp" && value === true) {
+      ctx.sender.runCommand("tag @a remove region-protected");
+    }
     ctx.sender.sendMessage(`Changed permission ${key} to ${value}`);
   });
 

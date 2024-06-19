@@ -18,4 +18,4 @@ export const VERSION = "3.0.0-beta";
 | this gametest api is supposed to work perfectly for.
 |
 */
-export const GAME_VERSION = "1.19.50";
+export const GAME_VERSION = "1.21.0";

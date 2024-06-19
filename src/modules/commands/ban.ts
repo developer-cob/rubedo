@@ -22,6 +22,7 @@ function ban(
     `Are you sure you want to ban ${player}, for ${duration ?? "forever"}`,
     () => {
       new Ban(player, duration, reason, ctx.sender.name);
+      ctx.sender.runCommandAsync(`kick ${player}`);
       ctx.sender.sendMessage(
         text["modules.commands.ban.reply"](player, duration, reason)
       );

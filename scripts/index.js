@@ -577,9 +577,7 @@ world5.beforeEvents.chatSend.subscribe((data) => {
   );
   const event = {
     message: data.message,
-    sendToTargets: data.sendToTargets,
-    sender: data.sender,
-    targets: data.getTargets()
+    sender: data.sender
   };
   if (!command2)
     return commandNotFound(data.sender, args[0]);
@@ -791,7 +789,6 @@ import {
   MinecraftDimensionTypes,
   Player as Player4,
   system as system2,
-  Vector,
   world as world6
 } from "@minecraft/server";
 
@@ -1077,6 +1074,11 @@ var ENCHANTMENTS = {
 };
 
 // src/utils.ts
+var Vector = class {
+  constructor(x, y, z) {
+    this.x = x, this.y = y, this.z = z;
+  }
+};
 var DIMENSIONS = {
   overworld: world6.getDimension(MinecraftDimensionTypes.overworld),
   nether: world6.getDimension(MinecraftDimensionTypes.nether),
@@ -1335,6 +1337,7 @@ function ban(ctx, player, duration, reason, by) {
     `Are you sure you want to ban ${player}, for ${duration ?? "forever"}`,
     () => {
       new Ban(player, duration, reason, ctx.sender.name);
+      ctx.sender.runCommandAsync(`kick ${player}`);
       ctx.sender.sendMessage(
         text["modules.commands.ban.reply"](player, duration, reason)
       );
@@ -1795,7 +1798,7 @@ async function getServerTPS() {
   let startTime = Date.now();
   let ticks = 0;
   return new Promise((resolve) => {
-    let s = system3.runTimeout(() => {
+    let s = system3.runInterval(() => {
       if (Date.now() - startTime < 1e3) {
         ticks++;
       } else {
@@ -1897,6 +1900,9 @@ permission.literal({
   if (!region)
     return ctx.sender.sendMessage(`You are not in a region`);
   region.changePermission(key, value);
+  if (key === "pvp" && value === true) {
+    ctx.sender.runCommand("tag @a remove region-protected");
+  }
   ctx.sender.sendMessage(`Changed permission ${key} to ${value}`);
 });
 permission.literal({
@@ -2489,7 +2495,7 @@ new Command({
 });
 
 // src/config/app.ts
-var VERSION = "3.0.0-beta";
+var VERSION = "3.1.0-beta";
 
 // src/modules/commands/version.ts
 new Command({
@@ -2606,10 +2612,10 @@ root7.literal({
 
 // src/modules/events/beforeDataDrivenEntityTriggerEvent.ts
 import { Player as Player7, world as world10 } from "@minecraft/server";
-var e = world10.afterEvents.dataDrivenEntityTriggerEvent.subscribe((data) => {
+var e = world10.afterEvents.dataDrivenEntityTrigger.subscribe((data) => {
   if (!(data.entity instanceof Player7))
     return;
-  if (data.id != "rubedo:becomeAdmin")
+  if (data.eventId != "rubedo:becomeAdmin")
     return;
   data.entity.removeTag("CHECK_PACK");
   const serverOwnerName = getServerOwnerName();
@@ -2618,7 +2624,7 @@ var e = world10.afterEvents.dataDrivenEntityTriggerEvent.subscribe((data) => {
     data.entity.sendMessage(
       `\xA7cFailed to give server owner: "${serverOwnerName}" is already owner!`
     );
-    return world10.beforeEvents.dataDrivenEntityTriggerEvent.unsubscribe(e);
+    return world10.afterEvents.dataDrivenEntityTrigger.unsubscribe(e);
   }
   setRole(data.entity, "admin");
   setServerOwner(data.entity);

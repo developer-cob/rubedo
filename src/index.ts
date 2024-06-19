@@ -13,6 +13,7 @@ system.beforeEvents.watchdogTerminate.subscribe((data) => {
   console.warn(`WATCHDOG TRIED TO CRASH = ${data.terminateReason}`);
 });
 
+
 /**
  * Stores npc locations that are verified to allow NPC's to spawn in
  */

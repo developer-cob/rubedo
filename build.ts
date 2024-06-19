@@ -31,4 +31,5 @@ esbuild
       `[${new Date().toLocaleTimeString()}]`,
       `Built for ${isDev ? "development" : "production"}...`
     );
-  });
+  })
+  .then((_r) => process.exit());
