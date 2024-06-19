@@ -1,6 +1,8 @@
 // src/index.ts
 import { system as system7 } from "@minecraft/server";
 
+console.warn('Scripts Reloaded')
+
 // src/lib/DynamicPropertyWrapper/DynamicProperty.ts
 import { world } from "@minecraft/server";
 var DynamicProperty = class {
@@ -579,7 +581,7 @@ world5.beforeEvents.chatSend.subscribe((data) => {
     message: data.message,
     sendToTargets: data.sendToTargets,
     sender: data.sender,
-    targets: data.getTargets()
+    // targets: data.getTargets() // deprecated
   };
   if (!command2)
     return commandNotFound(data.sender, args[0]);
@@ -785,13 +787,20 @@ function confirmAction(player, action, onConfirm, onCancel = () => {
   new MessageForm("Confirm To Continue", action).setButton1("Confirm", onConfirm).setButton2("Never Mind", onCancel).show(player, onCancel);
 }
 
+class Vector {
+  constructor( x, y, z ) {
+    this.x = x, 
+    this.y = y,
+    this.z = z
+  }
+}
+
 // src/utils.ts
 import {
   GameMode,
   MinecraftDimensionTypes,
   Player as Player4,
   system as system2,
-  Vector,
   world as world6
 } from "@minecraft/server";
 
@@ -2606,10 +2615,10 @@ root7.literal({
 
 // src/modules/events/beforeDataDrivenEntityTriggerEvent.ts
 import { Player as Player7, world as world10 } from "@minecraft/server";
-var e = world10.afterEvents.dataDrivenEntityTriggerEvent.subscribe((data) => {
+world10.afterEvents.dataDrivenEntityTrigger.subscribe((data) => {
   if (!(data.entity instanceof Player7))
     return;
-  if (data.id != "rubedo:becomeAdmin")
+  if (data.eventId != "rubedo:becomeAdmin")
     return;
   data.entity.removeTag("CHECK_PACK");
   const serverOwnerName = getServerOwnerName();
@@ -2618,7 +2627,7 @@ var e = world10.afterEvents.dataDrivenEntityTriggerEvent.subscribe((data) => {
     data.entity.sendMessage(
       `\xA7cFailed to give server owner: "${serverOwnerName}" is already owner!`
     );
-    return world10.beforeEvents.dataDrivenEntityTriggerEvent.unsubscribe(e);
+    return world10.afterEvents.dataDrivenEntityTrigger.unsubscribe(e);
   }
   setRole(data.entity, "admin");
   setServerOwner(data.entity);
@@ -3206,3 +3215,8 @@ export {
   clearNpcLocations,
   database
 };
+
+
+// import { world as world19 } from "@minecraft/server"
+
+// world19.afterEvents.chatSend
