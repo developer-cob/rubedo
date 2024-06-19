@@ -5,7 +5,7 @@ async function getServerTPS(): Promise<number> {
   let startTime = Date.now();
   let ticks = 0;
   return new Promise((resolve) => {
-    let s = system.runTimeout(() => {
+    let s = system.runInterval(() => {
       if (Date.now() - startTime < 1000) {
         ticks++;
       } else {

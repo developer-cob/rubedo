@@ -5,7 +5,6 @@ import {
   MinecraftDimensionTypes,
   Player,
   system,
-  Vector,
   Vector3,
   world,
 } from "@minecraft/server";
@@ -15,6 +14,16 @@ import { ChangePlayerRoleTask } from "./modules/models/Task";
 import { APPEAL_LINK, BANNED_BLOCKS, BANNED_ITEMS } from "./config/moderation";
 import { TABLES } from "./tables";
 import { ENCHANTMENTS } from "./config/enchantments";
+
+
+export class Vector {
+  x: number; y: number; z: number;
+  constructor( x: number, y: number, z: number ) {
+    this.x = x, 
+    this.y = y,
+    this.z = z
+  }
+}
 
 /**
  * This is to reduce lag when grabbing dimensions keep them set and pre-defined

@@ -1,8 +1,6 @@
 // src/index.ts
 import { system as system7 } from "@minecraft/server";
 
-console.warn('Scripts Reloaded')
-
 // src/lib/DynamicPropertyWrapper/DynamicProperty.ts
 import { world } from "@minecraft/server";
 var DynamicProperty = class {
@@ -579,9 +577,7 @@ world5.beforeEvents.chatSend.subscribe((data) => {
   );
   const event = {
     message: data.message,
-    sendToTargets: data.sendToTargets,
-    sender: data.sender,
-    // targets: data.getTargets() // deprecated
+    sender: data.sender
   };
   if (!command2)
     return commandNotFound(data.sender, args[0]);
@@ -785,14 +781,6 @@ var MessageForm = class {
 function confirmAction(player, action, onConfirm, onCancel = () => {
 }) {
   new MessageForm("Confirm To Continue", action).setButton1("Confirm", onConfirm).setButton2("Never Mind", onCancel).show(player, onCancel);
-}
-
-class Vector {
-  constructor( x, y, z ) {
-    this.x = x, 
-    this.y = y,
-    this.z = z
-  }
 }
 
 // src/utils.ts
@@ -1086,6 +1074,11 @@ var ENCHANTMENTS = {
 };
 
 // src/utils.ts
+var Vector = class {
+  constructor(x, y, z) {
+    this.x = x, this.y = y, this.z = z;
+  }
+};
 var DIMENSIONS = {
   overworld: world6.getDimension(MinecraftDimensionTypes.overworld),
   nether: world6.getDimension(MinecraftDimensionTypes.nether),
@@ -1344,6 +1337,7 @@ function ban(ctx, player, duration, reason, by) {
     `Are you sure you want to ban ${player}, for ${duration ?? "forever"}`,
     () => {
       new Ban(player, duration, reason, ctx.sender.name);
+      ctx.sender.runCommandAsync(`kick ${player}`);
       ctx.sender.sendMessage(
         text["modules.commands.ban.reply"](player, duration, reason)
       );
@@ -1804,7 +1798,7 @@ async function getServerTPS() {
   let startTime = Date.now();
   let ticks = 0;
   return new Promise((resolve) => {
-    let s = system3.runTimeout(() => {
+    let s = system3.runInterval(() => {
       if (Date.now() - startTime < 1e3) {
         ticks++;
       } else {
@@ -1906,6 +1900,9 @@ permission.literal({
   if (!region)
     return ctx.sender.sendMessage(`You are not in a region`);
   region.changePermission(key, value);
+  if (key === "pvp" && value === true) {
+    ctx.sender.runCommand("tag @a remove region-protected");
+  }
   ctx.sender.sendMessage(`Changed permission ${key} to ${value}`);
 });
 permission.literal({
@@ -2498,7 +2495,7 @@ new Command({
 });
 
 // src/config/app.ts
-var VERSION = "3.0.0-beta";
+var VERSION = "3.1.0-beta";
 
 // src/modules/commands/version.ts
 new Command({
@@ -2615,7 +2612,7 @@ root7.literal({
 
 // src/modules/events/beforeDataDrivenEntityTriggerEvent.ts
 import { Player as Player7, world as world10 } from "@minecraft/server";
-world10.afterEvents.dataDrivenEntityTrigger.subscribe((data) => {
+var e = world10.afterEvents.dataDrivenEntityTrigger.subscribe((data) => {
   if (!(data.entity instanceof Player7))
     return;
   if (data.eventId != "rubedo:becomeAdmin")
@@ -3215,8 +3212,3 @@ export {
   clearNpcLocations,
   database
 };
-
-
-// import { world as world19 } from "@minecraft/server"
-
-// world19.afterEvents.chatSend

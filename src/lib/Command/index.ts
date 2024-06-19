@@ -22,9 +22,9 @@ export const commandCooldowns = new PlayerLog<{ [key: string]: number }>();
 
 export interface ChatEventDetails {
   message: string;
-  sendToTargets: boolean;
+  // sendToTargets: boolean;
   sender: Player;
-  targets: Player[];
+  // targets: Player[];
 }
 
 world.beforeEvents.chatSend.subscribe((data) => {
@@ -38,9 +38,9 @@ world.beforeEvents.chatSend.subscribe((data) => {
   );
   const event: ChatEventDetails = {
     message: data.message,
-    sendToTargets: data.sendToTargets,
+    // sendToTargets: data.sendToTargets, deprecated
     sender: data.sender,
-    targets: data.getTargets(),
+    // targets: data.getTargets(), deprecated
   };
   if (!command) return commandNotFound(data.sender, args[0]);
   if (!command.data?.requires?.(data.sender))
